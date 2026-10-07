@@ -43,3 +43,22 @@ def _no_network(request: pytest.FixtureRequest):
 @pytest.fixture(scope="session")
 def repo_root() -> Path:
     return ROOT
+
+
+@pytest.fixture(scope="session")
+def tiny_tokenizer_json(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A tiny byte-level BPE (km/en/zh) with the real pre-tokeniser and control tokens."""
+    from tokenizer_fixtures import build_tiny_tokenizer
+
+    return build_tiny_tokenizer(tmp_path_factory.mktemp("tiny_tokenizer"))
+
+
+@pytest.fixture(scope="session")
+def real_tokenizer_dir() -> Path:
+    """The real 248K-token upstream tokenizer (pinned download, cached); skips when unavailable."""
+    from tokenizer_fixtures import real_tokenizer_dir as fetch
+
+    path = fetch()
+    if path is None:
+        pytest.skip("real upstream tokenizer files unavailable (offline?)")
+    return path

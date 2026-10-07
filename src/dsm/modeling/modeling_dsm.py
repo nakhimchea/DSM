@@ -24,7 +24,16 @@ from transformers.modeling_layers import GradientCheckpointingLayer
 from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast
 from transformers.modeling_utils import PreTrainedModel
 
-from . import cache_dsm
+from .cache_dsm import (
+    has_previous_state,
+    new_cache,
+    past_length,
+    read_conv_prefix,
+    read_recurrent_state,
+    update_kv,
+    write_conv_state,
+    write_recurrent_state,
+)
 from .configuration_dsm import DSMConfig
 from .ops_dsm import causal_conv1d, chunked_cross_entropy, gated_delta_rule, resolve_backend
 
@@ -167,7 +176,7 @@ class DSMAttention(nn.Module):
         query, key = apply_rotary(query, key, cos, sin)
 
         if past_key_values is not None:
-            key, value = cache_dsm.update_kv(past_key_values, self.layer_idx, key, value)
+            key, value = update_kv(past_key_values, self.layer_idx, key, value)
 
         if self.num_kv_groups > 1:
             key = key.repeat_interleave(self.num_kv_groups, dim=1)
@@ -254,7 +263,7 @@ class DSMGatedDeltaNet(nn.Module):
             hidden_states = (hidden_states * padding_mask[:, :, None]).to(hidden_states.dtype)
         batch, seq_len, _ = hidden_states.shape
         backend = resolve_backend(self.config.gdn_backend, hidden_states.device)
-        has_state = cache_dsm.has_previous_state(past_key_values, self.layer_idx)
+        has_state = has_previous_state(past_key_values, self.layer_idx)
 
         mixed = self.in_proj_qkv(hidden_states).transpose(1, 2)  # [B, C, T] raw conv inputs
         z = self.in_proj_z(hidden_states).view(batch, seq_len, self.num_v_heads, self.head_v_dim)
@@ -263,9 +272,9 @@ class DSMGatedDeltaNet(nn.Module):
 
         prefix = None
         if has_state:
-            prefix = cache_dsm.read_conv_prefix(past_key_values, self.layer_idx, self.conv_kernel_size)
+            prefix = read_conv_prefix(past_key_values, self.layer_idx, self.conv_kernel_size)
         if past_key_values is not None:
-            cache_dsm.write_conv_state(past_key_values, self.layer_idx, mixed, self.conv_kernel_size)
+            write_conv_state(past_key_values, self.layer_idx, mixed, self.conv_kernel_size)
         mixed = causal_conv1d(mixed, self.conv1d.weight.squeeze(1), prefix=prefix, doc_ids=doc_ids)
         mixed = mixed.transpose(1, 2)
 
@@ -284,7 +293,7 @@ class DSMGatedDeltaNet(nn.Module):
             query = query.repeat_interleave(rep, dim=2)
             key = key.repeat_interleave(rep, dim=2)
 
-        initial_state = cache_dsm.read_recurrent_state(past_key_values, self.layer_idx) if has_state else None
+        initial_state = read_recurrent_state(past_key_values, self.layer_idx) if has_state else None
         core, final_state = gated_delta_rule(
             query,
             key,
@@ -297,7 +306,7 @@ class DSMGatedDeltaNet(nn.Module):
             single_step=has_state and seq_len == 1,
         )
         if past_key_values is not None:
-            cache_dsm.write_recurrent_state(past_key_values, self.layer_idx, final_state)
+            write_recurrent_state(past_key_values, self.layer_idx, final_state)
 
         core = self.norm(core, z).reshape(batch, seq_len, -1)
         return self.out_proj(core)
@@ -475,10 +484,10 @@ class DSMModel(DSMPreTrainedModel):
         if self.gradient_checkpointing and self.training:
             use_cache = False
         if use_cache and past_key_values is None:
-            past_key_values = cache_dsm.new_cache(self.config)
+            past_key_values = new_cache(self.config)
         if not use_cache:
             past_key_values = None
-        past = cache_dsm.past_length(past_key_values)
+        past = past_length(past_key_values)
 
         if position_ids is None:
             position_ids = torch.arange(past, past + seq_len, device=device).unsqueeze(0).expand(batch, -1)
