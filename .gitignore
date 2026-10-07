@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv*/
+.pytest_cache/
+.ruff_cache/
+
+# Large artifacts produced by the pipeline (never commit weights or corpora)
+/models/
+/checkpoints/
+/runs/
+/work/
+/datasets/
+/exports/
+/reports/
+*.safetensors
+*.gguf
+*.bin
+*.idx
+*.npy
+*.jsonl.zst
+*.parquet
+
+# Local caches
+.cache/
+wheelhouse/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store

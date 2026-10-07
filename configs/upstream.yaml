@@ -1,0 +1,81 @@
+# -----------------------------------------------------------------------------
+# configs/upstream.yaml
+#
+# The single place in this repository where upstream (source-checkpoint)
+# identifiers live. Code reads these values instead of hard-coding names, so
+# every reference to the source model is auditable here, in NOTICE and in
+# docs/12_licensing_provenance.md (see .scrub-allowlist).
+# -----------------------------------------------------------------------------
+
+upstream:
+  # Hugging Face repo ids of the source checkpoints (downloaded on YOUR machine;
+  # see scripts/10_fetch_upstream.sh).
+  base_repo_id: "Qwen/Qwen3.5-0.8B-Base"
+  instruct_repo_id: "Qwen/Qwen3.5-0.8B"
+  license: "Apache-2.0"
+  copyright: "Copyright 2026 Alibaba Cloud"
+
+  # transformers identifiers - used ONLY by the converter's validation step and
+  # by the dev-only parity tests (to build the reference implementation).
+  model_types:
+    composite: "qwen3_5"
+    text: "qwen3_5_text"
+  architectures:
+    composite: "Qwen3_5ForConditionalGeneration"
+    causal_lm: "Qwen3_5ForCausalLM"
+
+  # Inference-engine ids. These are compute-graph identifiers inside the engines
+  # (they select the C++/CUDA implementation) and cannot be renamed without
+  # forking the engine. They appear in exported GGUF metadata as
+  # `general.architecture` and `tokenizer.ggml.pre`, nowhere else.
+  engine_ids:
+    gguf_arch: "qwen35"
+    gguf_tokenizer_pre: "qwen35"
+    llama_cpp_text_model_class: "Qwen3_5TextModel"
+    vllm_causal_lm: "Qwen3_5ForCausalLM"
+    vllm_text_model_type: "qwen3_5_text"
+  # Pinned llama.cpp commit used by `dsm export gguf` (update deliberately).
+  llama_cpp:
+    repo: "https://github.com/ggml-org/llama.cpp"
+    ref: "master"
+
+scrub:
+  # Case-insensitive substrings that must not appear in a shipped DSM model
+  # directory (checked by `dsm audit model`).
+  denylist:
+    - "qwen"
+    - "alibaba"
+    - "aliyun"
+    - "tongyi"
+    - "dashscope"
+    - "modelscope"
+    - "通义"
+    - "千问"
+    - "阿里"
+  # Files inside a model directory that are allowed (legally required) to name
+  # the upstream: the upstream LICENSE and the DSM NOTICE.
+  artifact_allow:
+    - "LICENSE"
+    - "NOTICE"
+  # Self-identification patterns of the upstream model. Used by the identity-leak
+  # filter on teacher outputs and by the identity eval (never as training text
+  # for chosen answers).
+  self_identification:
+    - "I am Qwen"
+    - "I'm Qwen"
+    - "我是通义千问"
+    - "我是千问"
+    - "我是Qwen"
+    - "created by Alibaba Cloud"
+    - "developed by Alibaba"
+    - "由阿里云开发"
+    - "阿里巴巴集团"
+  # Names used in adversarial identity probes ("Are you <name>?").
+  probe_names:
+    - "Qwen"
+    - "Tongyi Qianwen"
+    - "通义千问"
+  probe_developers:
+    - "Alibaba"
+    - "Alibaba Cloud"
+    - "阿里巴巴"

@@ -1,0 +1,44 @@
+DSM - Copyright 2026 Doslarb
+
+This repository (code, configuration, documentation) is licensed under the
+Apache License, Version 2.0 (see LICENSE).
+
+-------------------------------------------------------------------------------
+Model provenance (required attribution, Apache License 2.0, Section 4)
+-------------------------------------------------------------------------------
+
+DSM1.0-0.8B model weights are a Derivative Work of the open-weight model
+"Qwen3.5-0.8B" / "Qwen3.5-0.8B-Base", Copyright 2026 Alibaba Cloud, licensed
+under the Apache License, Version 2.0.
+
+Modifications made by Doslarb include, depending on the release:
+  * removal of the vision encoder and multi-token-prediction head;
+  * re-implementation of the text decoder in an independent code base;
+  * a new chat template, tokenizer configuration and (optionally) additional
+    Khmer vocabulary entries;
+  * continued pre-training, supervised fine-tuning and preference optimisation
+    on Khmer, English and Chinese data;
+  * quantisation and format conversion for local inference.
+
+Every distributed copy of DSM weights (safetensors or GGUF) must be accompanied
+by the upstream LICENSE file and this NOTICE. The upstream product names above
+are trademarks of their owner and are not used to brand DSM.
+
+-------------------------------------------------------------------------------
+Third-party code included in this repository
+-------------------------------------------------------------------------------
+
+src/dsm/data/khmer/khnormal.py
+    Khmer normalisation algorithm by SIL Global (khmer-character-specification),
+    Copyright (c) 2021-2024 SIL Global, MIT License. The full MIT notice is kept
+    in the file header.
+
+-------------------------------------------------------------------------------
+References (no code copied)
+-------------------------------------------------------------------------------
+
+The DSM modelling code is an independent implementation of a publicly
+documented hybrid Gated-DeltaNet / gated-attention decoder. Algorithmic
+references: "Gated Delta Networks: Improving Mamba2 with Delta Rule"
+(Yang, Kautz, Hatamizadeh, ICLR 2025); flash-linear-attention (MIT);
+Hugging Face Transformers (Apache-2.0).
