@@ -42,6 +42,7 @@ It is also a worked example of the whole lifecycle of a small LLM:
 | Make it fast locally (tokenizer, quantisation, llama.cpp) | [11_compression_local_inference.md](11_compression_local_inference.md) |
 | Licensing, provenance and "no upstream names" | [12_licensing_provenance.md](12_licensing_provenance.md) |
 | Run everything on your GPU, step by step | [13_runbook_24gb.md](13_runbook_24gb.md) |
+| Make Khmer cheaper: measure and extend the vocabulary | [14_khmer_tokenizer.md](14_khmer_tokenizer.md), `src/dsm/tokenizer/` |
 
 ## The two paths in the runbook
 

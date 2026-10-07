@@ -144,12 +144,21 @@ class BaseTrainer:
             embedding.requires_grad_(True)
         if cfg.trainable == "new_rows":
             keep = torch.zeros(embedding.shape[0], 1, dtype=embedding.dtype, device=embedding.device)
-            keep[cfg.new_rows_from :] = 1.0
+            keep[self.new_rows_from() :] = 1.0
             embedding.register_hook(lambda grad: grad * keep)
         params = [p for p in model.parameters() if p.requires_grad]
         if not params:
             raise ValueError("no trainable parameters")
         return params
+
+    def new_rows_from(self) -> int:
+        """First trainable embedding row in ``new_rows`` mode (``extension.json`` written by remap)."""
+        if self.cfg.new_rows_from is not None:
+            return int(self.cfg.new_rows_from)
+        meta = self.src_dir / "extension.json" if self.src_dir else None
+        if meta is None or not meta.is_file():
+            raise ValueError("trainable: new_rows needs new_rows_from or a model with extension.json")
+        return int(json.loads(meta.read_text(encoding="utf-8"))["start_id"])
 
     def _build_optimizer(self) -> torch.optim.Optimizer:
         cfg = self.cfg.optimizer
@@ -340,6 +349,7 @@ class LMTrainer(BaseTrainer):
         if cfg.stage in PRETRAIN_STAGES:
             from dsm.train.datasets import PretrainMixture
 
+            self.check_packed_tokenizer(cfg.train + cfg.eval, quiet)
             self.total_steps = cfg.steps_for_tokens()
             self.data = PretrainMixture(
                 cfg.train, cfg.seq_len, self.total_steps * cfg.sequences_per_step, cfg.seed
@@ -372,6 +382,27 @@ class LMTrainer(BaseTrainer):
         else:
             raise ValueError(f"LMTrainer does not handle stage {cfg.stage!r} (use dsm dpo)")
         self._eval_sets = None
+
+    def check_packed_tokenizer(self, sources: list, quiet: bool = False) -> None:
+        """Packed data must come from this model's tokenizer.json (e.g. not the pilot's other arm)."""
+        from dsm.data.packed import PackedTokens
+
+        for source in sources:
+            meta = PackedTokens(source.path).meta
+            packed = meta.get("tokenizer")
+            if packed is None:
+                if not quiet:
+                    print(f"warning: {source.path} records no tokenizer hash; cannot check it")
+            elif packed != self.tokenizer_key:
+                raise ValueError(
+                    f"{source.path} was tokenised with tokenizer {packed}, but the model uses "
+                    f"{self.tokenizer_key} ({self.tok_dir / 'tokenizer.json'}); "
+                    f"re-pack it with `dsm data pack --tokenizer {self.tok_dir}`"
+                )
+            if int(meta.get("vocab_size") or 0) > self.model.config.vocab_size:
+                raise ValueError(
+                    f"{source.path}: token ids beyond the model's {self.model.config.vocab_size} rows"
+                )
 
     def micro_batches(self, step: int) -> list[dict[str, torch.Tensor]]:
         cfg = self.cfg

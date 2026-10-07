@@ -95,7 +95,7 @@ class TrainConfig:
     precision: str = "bf16"  # bf16 (autocast, fp32 master weights) | fp32
     gradient_checkpointing: bool = True
     trainable: str = "all"
-    new_rows_from: int | None = None  # trainable == new_rows: first new embedding row
+    new_rows_from: int | None = None  # trainable == new_rows: first new row (default: <model>/extension.json)
     loss_chunk_size: int = 1024
     log_every: int = 10
     eval_every: int = 500
@@ -129,8 +129,8 @@ class TrainConfig:
             raise ValueError(f"stage must be one of {STAGES}")
         if self.trainable not in TRAINABLE:
             raise ValueError(f"trainable must be one of {TRAINABLE}")
-        if self.trainable == "new_rows" and self.new_rows_from is None:
-            raise ValueError("trainable: new_rows needs new_rows_from")
+        if self.trainable == "new_rows" and self.new_rows_from is None and self.model is None:
+            raise ValueError("trainable: new_rows needs new_rows_from (or a model with extension.json)")
         if self.model is None and self.model_config is None:
             raise ValueError("set model (a DSM checkpoint) or model_config (from scratch)")
         if self.model is None and self.tokenizer is None:

@@ -5,7 +5,7 @@ DSM is meant to serve bank customers and staff offline. Safety comes in two laye
 1. **Trained behaviour.** Policy-conditioned SFT data and DPO pairs teach the model to decline
    genuinely harmful requests, support people in distress, and answer legitimate questions
    **without refusing**.
-2. **Runtime safeguards** around the model (M6, `src/dsm/safeguards/runtime.py`). The model is not
+2. **Runtime safeguards** around the model (`src/dsm/safeguards/runtime.py`). The model is not
    the only line of defence: money-moving tools need explicit confirmation, logs are PII-masked,
    and only allow-listed tools can be called.
 
@@ -100,7 +100,7 @@ dsm build preference --kind over_refusal --input datasets/sft/benign.jsonl.zst \
   refusal), and on-policy pairs where the judge penalises both compliance with harm and
   over-refusal.
 
-## 3. Runtime safeguards (M6)
+## 3. Runtime safeguards
 
 | Safeguard | Where |
 |---|---|
@@ -110,7 +110,7 @@ dsm build preference --kind over_refusal --input datasets/sft/benign.jsonl.zst \
 | PII masking in logs (account numbers, phone numbers, card numbers, IDs) | runtime |
 | Offline: `127.0.0.1` binding, no telemetry, `dsm audit offline` | serve / audit |
 
-## 4. Evaluation and gates (M5)
+## 4. Evaluation and gates
 
 * Harmful-prompt refusal rate **≥ 90 %** per language.
 * Benign over-refusal **≤ 10 %**. XSTest-style probes plus the bank `answer` scenarios.

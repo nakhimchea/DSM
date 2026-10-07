@@ -116,7 +116,7 @@ should not rise more than about 3 % (gate).
 remembers what it sees at low LR best. Start it from the CPT output. The optimizer state is
 rebuilt during a short warm-up.
 
-**Tokenizer pilot.** After extending the vocabulary (M8), the new rows start as the mean of their
+**Tokenizer pilot** ([14_khmer_tokenizer.md](14_khmer_tokenizer.md)). After extending the vocabulary, the new rows start as the mean of their
 sub-token embeddings. `trainable: new_rows` updates only rows ≥ `new_rows_from`: the other rows
 receive zero gradient and no weight decay, and a test checks that they stay bit-identical. Then
 continue with normal CPT. Compare arms with **bits per byte**, never with loss per token.

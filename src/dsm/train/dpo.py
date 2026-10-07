@@ -11,7 +11,9 @@ which keeps the chosen answers likely and limits drift.
 
 Reference log-probabilities are computed ONCE, before the first update, with
 the initial weights - exactly the reference model - so no second copy of the
-model has to sit in GPU memory. They are cached in ``output_dir/reference_logps.npy``.
+model has to sit in GPU memory. They are cached in ``output_dir/reference_logps-<key>.npy``,
+keyed by every token of the pairs and the starting weights, so a resumed run reuses them and a
+run on new data or a new starting model never does.
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ import argparse
 import hashlib
 import math
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -154,12 +157,22 @@ class DPOTrainer(BaseTrainer):
             "pair_index": torch.tensor(indices, dtype=torch.long),
         }
 
+    def reference_key(self) -> str:
+        """Cache key of the reference log-probs: every token and label, and the starting weights."""
+        digest = hashlib.sha256(f"{self.cfg.seed}|{self.cfg.precision}".encode())
+        for pair in self.pairs:
+            for part in (pair.chosen_ids, pair.chosen_labels, pair.rejected_ids, pair.rejected_labels):
+                digest.update(np.asarray(part, dtype=np.int64).tobytes())
+        if self.src_dir is not None:  # content, not timestamps: a re-saved model may keep its mtime
+            from dsm.utils import sha256_file
+
+            for path in sorted(Path(self.src_dir).glob("model*.safetensors")):
+                digest.update(sha256_file(path).encode())
+        return digest.hexdigest()[:16]
+
     @torch.no_grad()
     def _reference_logps(self) -> np.ndarray:
-        digest = hashlib.sha256(
-            str([len(p.chosen_ids) + len(p.rejected_ids) for p in self.pairs]).encode()
-        ).hexdigest()[:16]
-        cache = self.out / f"reference_logps-{digest}.npy"
+        cache = self.out / f"reference_logps-{self.reference_key()}.npy"
         if cache.is_file():
             return np.load(cache)
         self.model.eval()

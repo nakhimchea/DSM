@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import shutil
 
 import pytest
 import torch
@@ -89,6 +90,37 @@ def test_interpolate_endpoints_and_midpoint():
         interpolate(a, _toy(3, rows=7), 0.5)
 
 
+def test_dpo_reference_cache_follows_data_and_weights(tmp_path, tiny_tokenizer_json):
+    from dsm.modeling import DSMForCausalLM
+    from dsm.train.checkpoint import save_model_dir
+
+    model = tiny_model_dir(tmp_path / "model", tiny_tokenizer_json)
+    data = dpo_file(tmp_path / "dpo.jsonl")
+    base = {
+        "stage": "dpo",
+        "model": str(model),
+        "output_dir": str(tmp_path / "run"),
+        "seq_len": 256,
+        "micro_batch_size": 4,
+        "train": [{"path": str(data)}],
+        "precision": "fp32",
+        "resume": None,
+    }
+    first = DPOTrainer(config_from_dict(base), quiet=True)
+    key = first.reference_key()
+    again = DPOTrainer(config_from_dict(base), quiet=True)  # same data, same weights: cache hit
+    assert again.reference_key() == key
+    assert len(list((tmp_path / "run").glob("reference_logps-*.npy"))) == 1
+    retrained = DSMForCausalLM.from_pretrained(model, dtype=torch.float32)
+    with torch.no_grad():
+        retrained.model.norm.weight.add_(0.5)
+    shutil.copytree(model, tmp_path / "files")
+    save_model_dir(retrained, model, carry_from=tmp_path / "files", dtype="float32")  # e.g. SFT re-run
+    other = DPOTrainer(config_from_dict(base), quiet=True)
+    assert other.reference_key() != key
+    assert not torch.equal(torch.as_tensor(other.reference), torch.as_tensor(first.reference))
+
+
 def test_chat_vector_vocab_aware():
     base, instruct = _toy(1), _toy(2)
     target = _toy(3, rows=8)  # extended vocabulary: 2 new rows
@@ -102,6 +134,10 @@ def test_chat_vector_vocab_aware():
     )
     skipped = chat_vector(base, instruct, target, skip_embeddings=True)
     assert torch.equal(skipped[EMBEDDING], target[EMBEDDING])
+    # new tokens that reused padding rows 4-5 (extension.json start_id = 4) get no delta either
+    reused = chat_vector(base, instruct, target, shared_rows=4)
+    assert torch.allclose(reused[EMBEDDING][:4], target[EMBEDDING][:4] + delta[:4])
+    assert torch.equal(reused[EMBEDDING][4:], target[EMBEDDING][4:])
 
 
 def test_write_merged_directory_loads(model_dir, tmp_path):

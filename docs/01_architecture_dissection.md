@@ -126,7 +126,7 @@ code, by contrast, ignores document boundaries in its PyTorch path.
 
 | Lever | Effect | Where |
 |---|---|---|
-| **Khmer tokens** (extend the vocabulary) | Khmer currently costs ~0.9 tokens/character (4.7× English); +8–16K Khmer merges roughly halve that, so ~2× faster Khmer generation and 2× more Khmer per context | `dsm tokenizer extend`, doc 11 |
+| **Khmer tokens** (extend the vocabulary) | Khmer currently costs ~0.9 tokens/character (4.7× English); +8–16K Khmer merges roughly halve that, so ~2× faster Khmer generation and 2× more Khmer per context | `dsm tokenizer extend`, doc 14 |
 | **Quantisation** | Q8_0 is nearly lossless (0.8 GB); Q4_K_M is ~2× faster on CPU but needs per-language checks | `dsm export gguf`, doc 11 |
 | **Context cap** | KV memory grows at 12 KiB/token; serve 8–32K unless needed | llama-server `-c` |
 | **`logits_to_keep`** | Prefill computes logits only for the last position (saves ~1 GB per 1K prompt tokens) | built in |

@@ -163,10 +163,22 @@ def test_config_loading(tmp_path):
         config_from_dict(
             {"stage": "cpt", "model": "m", "output_dir": "o", "train": ["a"], "learning_rate": 1}
         )
+    # new_rows: the first new row comes from new_rows_from or the model's extension.json
     with pytest.raises(ValueError, match="new_rows_from"):
         config_from_dict(
-            {"stage": "cpt", "model": "m", "output_dir": "o", "train": ["a"], "trainable": "new_rows"}
+            {
+                "stage": "pt",
+                "model_config": "m.yaml",
+                "tokenizer": "t",
+                "output_dir": "o",
+                "train": ["a"],
+                "trainable": "new_rows",
+            }
         )
+    cfg = config_from_dict(
+        {"stage": "cpt", "model": "m", "output_dir": "o", "train": ["a"], "trainable": "new_rows"}
+    )
+    assert cfg.new_rows_from is None
 
 
 def test_token_byte_lengths_match_utf8(tiny_tokenizer_json):

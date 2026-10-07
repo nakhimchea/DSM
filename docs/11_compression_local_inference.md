@@ -8,7 +8,7 @@ responses fast, especially in Khmer.
 
 | Lever | Why it matters for DSM |
 |---|---|
-| **Tokens per character** | Khmer costs ~0.97 tokens per character, against 0.19 for English and 0.47 for Chinese. The same answer in Khmer needs about 5× more decoding steps than in English. A Khmer-extended vocabulary (tokenizer pilot, M8) is the biggest speed-up for Khmer users. |
+| **Tokens per character** | Khmer costs ~0.97 tokens per character, against 0.19 for English and 0.47 for Chinese. The same answer in Khmer needs about 5× more decoding steps than in English. A Khmer-extended vocabulary ([14_khmer_tokenizer.md](14_khmer_tokenizer.md)) is the biggest speed-up for Khmer users. |
 | **Weight bytes** | Decoding is memory-bound. Q8_0 reads ~0.8 GB per token; Q4_K_M ~0.5 GB. |
 | **LM head** | The 248K × 1024 output projection is ~29 % of the decode FLOPs at 4K context. A vocabulary trim is a phase-2 option (~6 % faster decoding, but it permutes token ids). |
 | **Cache** | Only 6 of 24 layers keep a KV cache (12 KiB / token); the 18 Gated DeltaNet layers keep a fixed 18.6 MiB state. A 32K-token conversation needs ~0.4 GB of cache instead of 1.5 GB. Long documents and spreadsheets are cheap. |
@@ -35,8 +35,9 @@ only adds the following:
   model directory;
 * no multi-token-prediction block;
 * the attention interval derived from `layer_types`;
-* a pre-tokeniser fallback. A Khmer-extended vocabulary changes llama.cpp's tokenizer fingerprint
-  but keeps DSM's pre-tokenisation regex, so it maps to the same pre-tokeniser.
+* a pre-tokeniser fallback. A Khmer-extended vocabulary (`extension.json` in the model
+  directory) changes llama.cpp's tokenizer fingerprint but keeps DSM's pre-tokenisation regex, so
+  it maps to the same pre-tokeniser; a test checks that llama.cpp then tokenises like `tokenizers`.
 
 `general.architecture` and `tokenizer.ggml.pre` keep llama.cpp's engine id for this compute graph.
 These are the only upstream identifiers in the file (see [12](12_licensing_provenance.md)).

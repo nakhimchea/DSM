@@ -4,10 +4,11 @@
   to trade a little preference strength for less drift, or two SFT runs.
 * ``chat-vector`` - ``target + scale * (instruct - base)``: transplants the
   upstream instruction tuning onto a continued-pre-trained base, so SFT starts
-  from a chat-capable model. **Vocabulary-aware**: if the target has more
-  embedding rows (Khmer extension), only the shared rows get the delta and the
-  new rows are left as trained. ``--skip-embeddings`` leaves the embedding
-  matrix untouched (useful after heavy CPT on a new language).
+  from a chat-capable model. **Vocabulary-aware**: after a Khmer extension
+  only rows that are the same token in all three models get the delta (rows
+  below the target's ``extension.json`` start id - the new tokens reuse the old
+  padding rows); the new rows are left as trained. ``--skip-embeddings`` leaves
+  the embedding matrix untouched (useful after heavy CPT on a new language).
 
 Math runs in fp32; results are stored in the target's dtype.
 """
@@ -24,6 +25,7 @@ from safetensors import safe_open
 from safetensors.torch import save_file
 
 EMBEDDING = "model.embed_tokens.weight"
+VOCAB_TENSORS = frozenset({EMBEDDING, "lm_head.weight"})
 
 
 def load_tensors(model_dir: str | Path) -> dict[str, torch.Tensor]:
@@ -75,9 +77,11 @@ def chat_vector(
     target: dict[str, torch.Tensor],
     scale: float = 1.0,
     skip_embeddings: bool = False,
+    shared_rows: int | None = None,
 ) -> dict[str, torch.Tensor]:
+    """``target + scale * (instruct - base)``; vocabulary rows only below ``shared_rows``."""
     _check_same(base, instruct)
-    _check_same(base, target, allow_rows={EMBEDDING})
+    _check_same(base, target, allow_rows=VOCAB_TENSORS)
     out = {}
     for key, tt in target.items():
         if not tt.is_floating_point() or (skip_embeddings and key == EMBEDDING):
@@ -85,8 +89,8 @@ def chat_vector(
             continue
         delta = instruct[key].float() - base[key].float()
         merged = tt.float().clone()
-        rows = min(delta.shape[0], merged.shape[0]) if delta.ndim else None
-        if rows is not None and delta.shape != merged.shape:  # extended vocabulary: shared rows only
+        if key in VOCAB_TENSORS:  # rows = tokens: only those shared by all three models
+            rows = min(delta.shape[0], merged.shape[0], shared_rows or delta.shape[0])
             merged[:rows] += scale * delta[:rows]
         else:
             merged += scale * delta
@@ -142,18 +146,22 @@ def main(argv: list[str] | None = None) -> int:
             merged, args.b, args.out, {"stage": "merge", "method": "interpolate", "alpha": args.alpha}
         )
     else:
+        extension = Path(args.target) / "extension.json"
+        shared = json.loads(extension.read_text())["start_id"] if extension.is_file() else None
         merged = chat_vector(
             load_tensors(args.base),
             load_tensors(args.instruct),
             load_tensors(args.target),
             args.scale,
             args.skip_embeddings,
+            shared_rows=shared,
         )
         entry = {
             "stage": "merge",
             "method": "chat_vector",
             "scale": args.scale,
             "skip_embeddings": args.skip_embeddings,
+            "shared_rows": shared,
         }
         path = write_merged(merged, args.target, args.out, entry)
     print(f"saved {path}")

@@ -47,6 +47,7 @@ DSM with `llama-server`, is [`docs/13_runbook_24gb.md`](docs/13_runbook_24gb.md)
 | [11 Compression & local inference](docs/11_compression_local_inference.md) | tokenizer, quantisation, llama.cpp |
 | [12 Licensing & provenance](docs/12_licensing_provenance.md) | Apache-2.0 obligations, data licences |
 | [13 Runbook (24 GB GPU)](docs/13_runbook_24gb.md) | commands, durations, gates |
+| [14 Khmer tokenizer](docs/14_khmer_tokenizer.md) | measuring fertility, extending the vocabulary, the pilot |
 
 ## Repository layout
 

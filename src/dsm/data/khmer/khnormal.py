@@ -3,8 +3,9 @@
 # Vendored from SIL Global's khmer-character-specification
 # (https://github.com/sillsdev/khmer-character-specification, python/scripts/khnormal).
 # DSM modifications: the third-party `regex` module is imported lazily (only
-# khtest() needs it), and the command-line entry point was removed. The
-# normalisation algorithm itself is unchanged.
+# khtest() needs it), the command-line entry point was removed, and the
+# per-syllable reordering is memoised (its result depends only on the
+# syllable's own characters). The normalisation algorithm itself is unchanged.
 #
 # Copyright (c) 2021-2024, SIL Global.
 #
@@ -173,37 +174,48 @@ def khnormal(txt, lang="km"):
         j = i + 1
         while j < len(charcats) and charcats[j].value > Cats.Base.value:
             j += 1
-        # Sort syllable based on character categories
-        # Sort the char indices by category then position in string
-        newindices = sorted(range(i, j), key=lambda e:(charcats[e].value, e))
-        replaces = "".join(txt[n] for n in newindices)
-
-        replaces = re.sub("(\u200D?\u17D2)[\u17D2\u200C\u200D]+",
-                          r"\1", replaces)      # remove multiple invisible chars
-        replaces = re.sub("\u17BE\u17B6", "\u17C4\u17B8", replaces)  # confusable vowels
-        # map compoound vowel sequences to compounds with -u before to be converted
-        replaces = re.sub("\u17C1([\u17BB-\u17BD]?)\u17B8", "\u17BE\\1", replaces)
-        replaces = re.sub("\u17C1([\u17BB-\u17BD]?)\u17B6", "\u17C4\\1", replaces)
-        replaces = re.sub("(\u17BE)(\u17BB)", r"\2\1", replaces)
-        # Replace -u + upper vowel with consonant shifter
-        replaces = re.sub(("((?:{STRONG})[\u17C1-\u17C5]?)\u17BB" + \
-                          "(?={VA}|\u17D0)").format(**khres), "\\1\u17CA",
-                          replaces, flags=re.X)
-        replaces = re.sub(("((?:{NSTRONG})[\u17C1-\u17C5]?)\u17BB" + \
-                          "(?={VA}|\u17D0)").format(**khres), "\\1\u17C9",
-                          replaces, flags=re.X)
-        replaces = re.sub("(\u17D2\u179A)(\u17D2[\u1780-\u17B3])",
-                          r"\2\1", replaces)    # coeng ro second
-        replaces = re.sub("(\u17D2)\u178A", "\\1\u178F", replaces)  # coeng da->ta
-        # convert lunar dates from old style to use lunar date symbols
-        replaces = re.sub("(\u17E1?)([\u17E0-\u17E9])\u17D2\u17D4",
-                lambda m:lunar(m, 0x19E0), replaces)
-        replaces = re.sub("\u17D4\u17D2(\u17E1?)([\u17E0-\u17E9])",
-                lambda m:lunar(m, 0x19F0), replaces)
-        replaces = re.sub("\u17D4\u17D2\u17D4", "\u19F0", replaces)
-        res.append(replaces)
+        res.append(_syllable(txt[i:j]))
         i = j
     return "".join(res)
+
+@functools.lru_cache(maxsize=1 << 16)
+def _syllable(syl):
+    ''' DSM: the body of khnormal's syllable loop for one syllable (memoised). A syllable
+        starts with a base that does not follow a coeng / ZWJ, so its categories depend
+        only on its own characters. '''
+    charcats = [charcat(c) for c in syl]
+    for k in range(1, len(syl)):
+        if syl[k-1] in "\u200D\u17D2" and charcats[k] in (Cats.Base, Cats.Coeng):
+            charcats[k] = charcats[k-1]
+    # Sort syllable based on character categories
+    # Sort the char indices by category then position in string
+    newindices = sorted(range(len(syl)), key=lambda e:(charcats[e].value, e))
+    replaces = "".join(syl[n] for n in newindices)
+
+    replaces = re.sub("(\u200D?\u17D2)[\u17D2\u200C\u200D]+",
+                      r"\1", replaces)      # remove multiple invisible chars
+    replaces = re.sub("\u17BE\u17B6", "\u17C4\u17B8", replaces)  # confusable vowels
+    # map compoound vowel sequences to compounds with -u before to be converted
+    replaces = re.sub("\u17C1([\u17BB-\u17BD]?)\u17B8", "\u17BE\\1", replaces)
+    replaces = re.sub("\u17C1([\u17BB-\u17BD]?)\u17B6", "\u17C4\\1", replaces)
+    replaces = re.sub("(\u17BE)(\u17BB)", r"\2\1", replaces)
+    # Replace -u + upper vowel with consonant shifter
+    replaces = re.sub(("((?:{STRONG})[\u17C1-\u17C5]?)\u17BB" + \
+                      "(?={VA}|\u17D0)").format(**khres), "\\1\u17CA",
+                      replaces, flags=re.X)
+    replaces = re.sub(("((?:{NSTRONG})[\u17C1-\u17C5]?)\u17BB" + \
+                      "(?={VA}|\u17D0)").format(**khres), "\\1\u17C9",
+                      replaces, flags=re.X)
+    replaces = re.sub("(\u17D2\u179A)(\u17D2[\u1780-\u17B3])",
+                      r"\2\1", replaces)    # coeng ro second
+    replaces = re.sub("(\u17D2)\u178A", "\\1\u178F", replaces)  # coeng da->ta
+    # convert lunar dates from old style to use lunar date symbols
+    replaces = re.sub("(\u17E1?)([\u17E0-\u17E9])\u17D2\u17D4",
+            lambda m:lunar(m, 0x19E0), replaces)
+    replaces = re.sub("\u17D4\u17D2(\u17E1?)([\u17E0-\u17E9])",
+            lambda m:lunar(m, 0x19F0), replaces)
+    replaces = re.sub("\u17D4\u17D2\u17D4", "\u19F0", replaces)
+    return replaces
 
 @functools.lru_cache(maxsize=None)
 def _syllable_patterns():

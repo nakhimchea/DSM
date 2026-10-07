@@ -1,13 +1,14 @@
-# Tokenizer pilot, arm B phase 1: after `dsm tokenizer extend` + `remap`, train ONLY the
-# new Khmer embedding rows (ids >= 248320) for ~50M tokens, so the new tokens catch up
-# before the rest of the network moves. Phase 2 = cpt_24gb.yaml on this output with
+# Tokenizer pilot, arm B phase 1 (docs/14_khmer_tokenizer.md): after `dsm tokenizer extend`
+# + `remap`, train ONLY the new Khmer embedding rows for ~50M tokens, so the new tokens catch
+# up before the rest of the network moves. The first new row is read from the model's
+# extension.json (248,070 for the DSM vocabulary). Phase 2 = cpt_24gb.yaml on this output with
 # max_tokens=1.0e8; arm A = cpt_24gb.yaml with the original tokenizer and max_tokens=1.5e8.
-# Compare per-language bits-per-byte curves (tokenizer-independent) in metrics.jsonl.
+# Every dataset must be packed with the extended tokenizer (*_ext); the trainer refuses
+# packs made with another tokenizer. Compare per-language bits per byte in metrics.jsonl.
 stage: cpt
 model: work/models/dsm-base-km-ext
 output_dir: work/runs/pilot_B1
 trainable: new_rows
-new_rows_from: 248320
 data:
   train:
     - {path: datasets/packed/km_web_ext, weight: 0.7}

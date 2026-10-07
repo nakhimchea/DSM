@@ -21,7 +21,9 @@ SFT_PAIRS = [
 ]
 
 
-def tiny_model_dir(out: Path, tokenizer_json: Path, seed: int = 0, **overrides) -> Path:
+def tiny_model_dir(
+    out: Path, tokenizer_json: Path, seed: int = 0, vocab_size: int = 512, **overrides
+) -> Path:
     from helpers import tiny_dsm_config
     from tokenizer_fixtures import special_ids
 
@@ -33,7 +35,7 @@ def tiny_model_dir(out: Path, tokenizer_json: Path, seed: int = 0, **overrides) 
     ids = special_ids(tokenizer_json)
     eos, pad = ids["<|im_end|>"], ids["<|endoftext|>"]
     torch.manual_seed(seed)
-    config = tiny_dsm_config(vocab_size=512, eos_token_id=eos, pad_token_id=pad, **overrides)
+    config = tiny_dsm_config(vocab_size=vocab_size, eos_token_id=eos, pad_token_id=pad, **overrides)
     model = DSMForCausalLM(config)
     save_model_dir(model, out, carry_from=None, dtype="float32")
     write_tokenizer_files(out, tokenizer_json, SYSTEM_PROMPT)
@@ -43,15 +45,18 @@ def tiny_model_dir(out: Path, tokenizer_json: Path, seed: int = 0, **overrides) 
     return out
 
 
-def packed_corpus(prefix: Path, tokenizer_json: Path, texts: list[str], name: str) -> Path:
+def packed_corpus(
+    prefix: Path, tokenizer_json: Path, texts: list[str], name: str, vocab_size: int = 512
+) -> Path:
     from tokenizer_fixtures import special_ids
     from tokenizers import Tokenizer
 
-    from dsm.data.packed import pack_texts
+    from dsm.data.packed import pack_texts, tokenizer_hash
 
     tokenizer = Tokenizer.from_file(str(tokenizer_json))
     eos = special_ids(tokenizer_json)["<|endoftext|>"]
-    pack_texts(texts, tokenizer, prefix, eos_id=eos, vocab_size=512, meta={"name": name, "license": "test"})
+    meta = {"name": name, "license": "test", "tokenizer": tokenizer_hash(tokenizer_json)}
+    pack_texts(texts, tokenizer, prefix, eos_id=eos, vocab_size=vocab_size, meta=meta)
     return prefix
 
 

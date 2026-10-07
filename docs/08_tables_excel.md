@@ -70,20 +70,20 @@ which are unsuitable licences for this project.
 | FinQA | MIT | `finqa` | financial reports. The gold **program** (`subtract(5829, 5735), divide(#0, 5735)`) is executed and rendered as numbered steps. Rows whose program does not reproduce the gold answer are dropped |
 
 Tables larger than 60 data rows are skipped, so the answer is always visible to the model. Further
-candidates for the catalogue (M7, licence check first): HiTab, TableBench / TableInstruct,
+candidates for the catalogue (licence check first): HiTab, TableBench / TableInstruct,
 InstructExcel.
 
 ## 4. Large sheets and the `table_query` tool
 
 A 0.8B model should not read 5,000 rows. For sheets beyond the row limit, the prompt shows the
-first rows plus the truncation note, and the model calls `table_query` (M6) with a filter,
+first rows plus the truncation note, and the model calls `table_query` with a filter,
 group-by or aggregation. The tool runs on the full sheet with pandas, and its result comes back as
 a small table. This keeps answers exact and the context short.
 
 ## 5. At inference
 
 * `dsm chat` → `/load report.xlsx` serialises the workbook with `workbook_to_text` and puts it into
-  the next user message (M6).
+  the next user message.
 * Other applications: call `dsm.tables.serialize.workbook_to_text(path)`, or vendor
   `serialize.py` and `formula.py`. They have no dependencies besides openpyxl for `.xlsx`.
 * Long tables need long context: SFT includes 8,192-token samples for table and RAG data.
@@ -93,6 +93,6 @@ a small table. This keeps answers exact and the context short.
 * SFT: about **10 %** tables: generated tasks (exact answers, formulas) + TAT-QA / FinQA (financial
   reasoning) + TabFact / WTQ (reading), with Khmer and Chinese from the generator and from
   translation.
-* Evaluation (M5): exact match on held-out generated sheets (numbers compared after normalising
+* Evaluation ([10_evaluation.md](10_evaluation.md)): exact match on held-out generated sheets (numbers compared after normalising
   separators), formula execution accuracy (the model's formula is run by the evaluator), and
   TAT-QA / FinQA accuracy.

@@ -125,7 +125,7 @@ record format above, and the record validator rejects any call that does not mat
 | When2Call and other OpenAI-style data | CC-BY-4.0 (When2Call) | `chat` | `tool_calls` / `<TOOLCALL>[...]` / `<tool_call>{...}` in messages; teaches when **not** to call |
 | MASSIVE (km-KH, zh-CN, en-US) | CC-BY-4.0 | `massive` | **native Khmer** function calling: intents → functions, slots → string arguments; the scenario's other intents are offered as alternatives |
 
-Licence check before use (see `configs/data/sources.yaml`, M7): APIGen-MT is non-commercial and
+Licence check before use (see `configs/data/sources.yaml`): APIGen-MT is non-commercial and
 excluded.
 
 ## 5. Translation
@@ -144,8 +144,8 @@ Tool dialogues are translated to Khmer and Chinese with the local translator
 
 * SFT: about **12 %** tools. Bank scenarios plus public data, with Khmer from MASSIVE and from
   translated dialogues.
-* Evaluation (M5): call accuracy compared on the parsed AST (name + arguments, order-insensitive
+* Evaluation ([10_evaluation.md](10_evaluation.md)): call accuracy compared on the parsed AST (name + arguments, order-insensitive
   for parallel calls), no-call precision, clarification rate, and answer faithfulness to tool
   results. Measured on held-out bank scenarios and a BFCL-style subset.
-* Runtime (M6): the application keeps the tool allowlist and the confirmation gate
+* Runtime (`src/dsm/safeguards/runtime.py`): the application keeps the tool allowlist and the confirmation gate
   ([06_safety.md](06_safety.md)). The model's request is never sufficient to move money.

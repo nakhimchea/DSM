@@ -105,7 +105,7 @@ Every other dataset passes the **identity-leak filter** (`dsm.data.synth.filters
 | DPO | identity pairs, ~3 % of pairs | push probability mass away from other names |
 | After merge / quantisation | identity gate. If it fails, a short *repair replay*: 1 epoch of identity + 10× general SFT data at low LR | merges and 4-bit quantisation can erode small behaviours |
 
-## 6. Gates (`configs/eval/gates.yaml`, M5)
+## 6. Gates (`configs/eval/gates.yaml`)
 
 * Identity accuracy ≥ 98 % **per language** on held-out paraphrases. DSM, ឌីអេសអិម and the Chinese
   spelling are all accepted.

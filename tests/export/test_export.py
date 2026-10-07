@@ -196,3 +196,81 @@ def test_llama_server_matches_pytorch(tiny_gguf):
     finally:
         process.terminate()
         process.wait(timeout=30)
+
+
+@pytest.fixture(scope="module", params=["tiny", pytest.param("real", marks=pytest.mark.realvocab)])
+def khmer_extended_gguf(request, tmp_path_factory, tiny_tokenizer_json):
+    """A tiny model whose vocabulary got Khmer merges (dsm tokenizer extend + remap), as GGUF."""
+    if not (LLAMA_CPP and (Path(LLAMA_CPP) / "conversion" / "__init__.py").is_file()):
+        pytest.skip("set DSM_LLAMA_CPP to a llama.cpp checkout (scripts/build_llama_cpp.sh)")
+    from tokenizer.test_extend import split_texts
+    from train.fixtures import tiny_model_dir
+
+    from dsm.export.gguf import convert
+    from dsm.tokenizer.extend import extend_tokenizer_dir
+    from dsm.tokenizer.remap import extend_model_dir
+
+    if request.param == "real":
+        tokenizer_json, rows, n_new = (
+            request.getfixturevalue("real_tokenizer_dir") / "tokenizer.json",
+            248_320,
+            512,
+        )
+    else:
+        tokenizer_json, rows, n_new = tiny_tokenizer_json, 512, 64
+    root = tmp_path_factory.mktemp(f"gguf_km_{request.param}")
+    base = tiny_model_dir(root / "base", tokenizer_json, vocab_size=rows)
+    train, held = split_texts()
+    extension = extend_tokenizer_dir(base, root / "tok", train, n_new=n_new)
+    extend_model_dir(base, root / "tok", root / "model")
+    path = convert(root / "model", root / "km-F32.gguf", outtype="f32", llama_cpp=LLAMA_CPP)
+    return root / "model", path, extension, held
+
+
+@pytest.mark.llamacpp
+def test_llama_cpp_tokenizes_the_khmer_extension_like_hf(khmer_extended_gguf):
+    """llama.cpp's own BPE (pre-tokeniser + ranked merges) must agree with tokenizers on new merges."""
+    import gguf as gguf_py
+    from tokenizer.test_extend import OTHER_TEXTS
+    from tokenizers import Tokenizer
+
+    from dsm.export.llama_server import start
+    from dsm.text import normalize_text
+    from dsm.utils import load_upstream
+
+    model_dir, path, extension, held = khmer_extended_gguf
+    reader = gguf_py.GGUFReader(str(path))
+    assert (
+        reader.fields["tokenizer.ggml.pre"].contents()
+        == load_upstream()["upstream"]["engine_ids"]["gguf_tokenizer_pre"]
+    )
+    binary = _binary("llama-server")
+    if binary is None:
+        pytest.skip("llama-server binary not built")
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    process = start(ServerConfig(gguf=str(path), port=port, ctx=512, gpu_layers=0, parallel=1), binary)
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+    def post(route, payload):
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{port}{route}",
+            json.dumps(payload).encode(),
+            {"Content-Type": "application/json"},
+        )
+        return json.loads(opener.open(request, timeout=60).read())
+
+    try:
+        tokenizer = Tokenizer.from_file(str(model_dir / "tokenizer.json"))
+        used_new = False
+        for text in [normalize_text(t) for t in held] + OTHER_TEXTS:
+            ours = tokenizer.encode(text, add_special_tokens=False).ids
+            assert post("/tokenize", {"content": text, "add_special": False})["tokens"] == ours, text
+            used_new |= any(i >= extension.start_id for i in ours)
+        assert used_new
+        text = normalize_text(held[0])
+        assert post("/detokenize", {"tokens": tokenizer.encode(text).ids})["content"] == text
+    finally:
+        process.terminate()
+        process.wait(timeout=30)

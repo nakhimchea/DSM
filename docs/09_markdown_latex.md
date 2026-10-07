@@ -37,7 +37,7 @@ Where it is used:
 | formatting, tables and math builders | samples that fail are not written |
 | teacher outputs (chat regeneration, judged DPO) | failing answers are dropped / ranked last |
 | format DPO pairs | chosen must pass, rejected must fail |
-| evaluation (M5) | format validity rate, gate ≥ 99 % |
+| evaluation | format validity rate, gate ≥ 99 % |
 
 `dollars_to_usd(text)` rewrites plain-text money (`$1,200` → `1,200 USD`, `$1.5 million` →
 `1.5 million USD`). Use it for sources without LaTeX, such as grade-school word problems. Never
@@ -62,7 +62,7 @@ From `data/seeds/formatting/facts.yaml`, in km/en/zh:
 | NuminaMath 1.5 / CoT | Apache-2.0 | `numinamath` | rows flagged invalid and proof problems dropped; solutions must pass the LaTeX validator |
 | MATH (competition) | MIT | `competition_math` | same converter; `\boxed{}` answers kept |
 
-Provenance note for the catalogue (M7): parts of the NuminaMath solutions were written or rewritten
+Provenance note for the catalogue: parts of the NuminaMath solutions were written or rewritten
 by a proprietary model. The dataset licence is Apache-2.0, but record `generated_by` honestly and
 let counsel decide (tier "needs counsel" in [12_licensing_provenance.md](12_licensing_provenance.md)).
 

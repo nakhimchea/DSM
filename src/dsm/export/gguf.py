@@ -108,13 +108,19 @@ def converter_class(llama_cpp: str | Path | None = None):
             self.hparams["full_attention_interval"] = attention_interval(self.hparams["layer_types"])
 
         def get_vocab_base_pre(self, tokenizer) -> str:
+            # A Khmer-extended vocabulary (dsm tokenizer extend) encodes llama.cpp's fingerprint
+            # text differently, so its hash is unknown; the pre-tokeniser itself is unchanged.
+            extended = (Path(self.dir_model) / "extension.json").is_file()
+            if extended and uses_dsm_pretokenizer(self.dir_model):
+                log.info("Khmer-extended vocabulary, same pre-tokeniser -> %s", ids["gguf_tokenizer_pre"])
+                return ids["gguf_tokenizer_pre"]
             try:
                 return super().get_vocab_base_pre(tokenizer)
             except NotImplementedError:
                 if not uses_dsm_pretokenizer(self.dir_model):
                     raise
                 log.info(
-                    "tokenizer fingerprint unknown to llama.cpp (extended vocabulary); same pre-tokeniser -> %s",
+                    "tokenizer fingerprint unknown to llama.cpp; same pre-tokeniser -> %s",
                     ids["gguf_tokenizer_pre"],
                 )
                 return ids["gguf_tokenizer_pre"]
