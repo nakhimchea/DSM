@@ -77,9 +77,13 @@ def save_model_dir(
         shutil.rmtree(out)
     out.mkdir(parents=True)
     save_file(weights_state(model, dtype), str(out / "model.safetensors"), metadata={"format": "pt"})
+    from dsm.modeling import AUTO_MAP
+
     config = copy.deepcopy(model.config)
     config.dtype = _DTYPES[dtype]
     config.use_cache = True
+    config.architectures = [type(model).__name__]
+    config.auto_map = dict(AUTO_MAP)
     config.save_pretrained(out)
     if carry_from is not None:
         for name in CARRY_FILES:

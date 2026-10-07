@@ -38,10 +38,11 @@ upstream:
     llama_cpp_text_model_class: "Qwen3_5TextModel"
     vllm_causal_lm: "Qwen3_5ForCausalLM"
     vllm_text_model_type: "qwen3_5_text"
-  # Pinned llama.cpp commit used by `dsm export gguf` (update deliberately).
+  # Pinned llama.cpp commit used by `dsm export gguf` (update deliberately, then re-run
+  # the `llamacpp` tests: GGUF greedy tokens and chat-template rendering must match DSM).
   llama_cpp:
     repo: "https://github.com/ggml-org/llama.cpp"
-    ref: "master"
+    ref: "36a73916ee0cb3b457f356066afabd47cce68884"  # 2026-10-07
 
 scrub:
   # Case-insensitive substrings that must not appear in a shipped DSM model

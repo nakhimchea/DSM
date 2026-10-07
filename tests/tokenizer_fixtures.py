@@ -11,10 +11,7 @@ from pathlib import Path
 from helpers import upstream_ids
 
 # Same pre-tokenisation as the real tokenizer: letters + combining marks stay together.
-PRETOKENIZE_REGEX = (
-    r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?[\p{L}\p{M}]+|\p{N}"
-    r"| ?[^\s\p{L}\p{M}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"
-)
+from dsm.tokenizer import PRETOKENIZE_REGEX  # noqa: E402
 
 # (content, special) in the same relative order as the real vocabulary
 ADDED_TOKENS = [

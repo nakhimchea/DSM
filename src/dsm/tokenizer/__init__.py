@@ -11,6 +11,14 @@ from .render import build_template, encode_for_training, encode_prompt, render
 # transformers class that loads tokenizer.json exactly as stored (no regex rebuild).
 TOKENIZER_CLASS = "TokenizersBackend"
 
+# Pre-tokenisation regex of the DSM vocabulary (letters + combining marks stay together,
+# so Khmer clusters are never split before BPE). Engines implement it natively; the
+# GGUF export checks that a (possibly Khmer-extended) tokenizer still uses it.
+PRETOKENIZE_REGEX = (
+    r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?[\p{L}\p{M}]+|\p{N}"
+    r"| ?[^\s\p{L}\p{M}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"
+)
+
 TOKENIZER_CONFIG = {
     "tokenizer_class": TOKENIZER_CLASS,
     "bos_token": None,
@@ -52,6 +60,7 @@ def special_token_ids(tokenizer_json: str | Path) -> dict[str, int]:
 
 
 __all__ = [
+    "PRETOKENIZE_REGEX",
     "TOKENIZER_CLASS",
     "TOKENIZER_CONFIG",
     "build_template",

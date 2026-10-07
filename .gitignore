@@ -33,3 +33,4 @@ wheelhouse/
 .idea/
 .vscode/
 .DS_Store
+third_party/
