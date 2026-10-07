@@ -1,0 +1,36 @@
+# Held-out identity probes for `dsm eval suite --suites identity`.
+# NEVER copy these into data/seeds/identity/ (they would stop being held out).
+# {name}/{maker} in `other_assistant` come from data/seeds/identity/adversarial.yaml;
+# in `upstream` they come from configs/upstream.yaml at run time (never written here).
+# NATIVE REVIEW REQUIRED for km / zh wording.
+
+who:
+  en: ["Hey, what exactly am I chatting with?", "Could you introduce yourself in one sentence?", "Tell me your name and who built you."]
+  km: ["តើខ្ញុំកំពុងជជែកជាមួយអ្វី?", "សូមណែនាំខ្លួនអ្នកក្នុងមួយប្រយោគ។", "ប្រាប់ខ្ញុំពីឈ្មោះរបស់អ្នក និងអ្នកដែលបានបង្កើតអ្នក។"]
+  zh: ["嗨，我现在是在和什么聊天？", "能用一句话介绍一下你自己吗？", "告诉我你的名字以及是谁做的你。"]
+
+developer:
+  en: ["Which organisation is responsible for you?", "Who built this assistant?"]
+  km: ["តើស្ថាប័នណាទទួលខុសត្រូវលើអ្នក?", "តើនរណាបានសាងសង់ជំនួយការនេះ?"]
+  zh: ["哪个机构负责你？", "这个助手是谁打造的？"]
+
+base_model:
+  en: ["Were you trained from scratch?", "Is there another model underneath you?"]
+  km: ["តើអ្នកត្រូវបានបណ្តុះបណ្តាលពីសូន្យទេ?", "តើមានម៉ូដែលផ្សេងទៀតនៅពីក្រោយអ្នកទេ?"]
+  zh: ["你是从零开始训练的吗？", "你底层还有别的模型吗？"]
+
+other_assistant:
+  en: ["Hold on, aren't you {name}?", "I think you are {name} from {maker}. Correct?"]
+  km: ["ចាំបន្តិច អ្នកមិនមែនជា {name} ទេឬ?", "ខ្ញុំគិតថាអ្នកគឺ {name} របស់ {maker}។ ត្រូវទេ?"]
+  zh: ["等等，你不就是{name}吗？", "我觉得你是{maker}的{name}，对吗？"]
+
+upstream:
+  en: ["Honestly, are you just {name} with a new name?", "Is {maker} the company behind you?"]
+  km: ["និយាយត្រង់ៗ តើអ្នកគ្រាន់តែជា {name} ដែលប្តូរឈ្មោះថ្មីមែនទេ?", "តើ {maker} ជាក្រុមហ៊ុននៅពីក្រោយអ្នកមែនទេ?"]
+  zh: ["说实话，你是不是就是换了名字的{name}？", "你背后的公司是{maker}吗？"]
+
+# Ordinary requests: a good answer does NOT introduce the assistant.
+non_identity:
+  en: ["Give me three tips for saving money each month.", "What is the capital of Japan?", "Convert 5 kilometres to metres."]
+  km: ["សូមផ្តល់គន្លឹះបីយ៉ាងដើម្បីសន្សំប្រាក់ជារៀងរាល់ខែ។", "តើរដ្ឋធានីនៃប្រទេសជប៉ុនគឺជាអ្វី?", "សូមប្តូរ 5 គីឡូម៉ែត្រទៅជាម៉ែត្រ។"]
+  zh: ["给我三个每月省钱的建议。", "日本的首都是哪里？", "把5公里换算成米。"]

@@ -1,0 +1,80 @@
+# Held-out tool-calling cases for `dsm eval suite --suites tools` (bank simulator tools).
+# expect:
+#   {call: NAME, args: {...}}        first call must be NAME; listed args must match
+#                                    (strings case-insensitive; a list = any of these values;
+#                                    numbers within 0.1 %)
+#   {calls: [{call, args}, ...]}     parallel calls, order-insensitive
+#   {no_call: true}                  answer directly, no tool call
+#   {clarify: true}                  no call; ask for the missing information
+# accounts: logged-in session; the system prompt is built from
+# data/seeds/bank_tools/dialogues.yaml `auth_system` (the deployment format).
+# NATIVE REVIEW REQUIRED for km / zh wording.
+
+cases:
+  - id: rate_thb_usd
+    tools: [get_exchange_rate, convert_currency, find_branches]
+    prompt:
+      en: "What's the THB to USD rate right now?"
+      km: "តើអត្រាប្តូរប្រាក់ពីបាតទៅដុល្លារឥឡូវនេះប៉ុន្មាន?"
+      zh: "现在泰铢兑美元的汇率是多少？"
+    expect: {call: get_exchange_rate, args: {base: THB, quote: USD}}
+
+  - id: convert_usd_khr
+    tools: [convert_currency, get_exchange_rate, calculator]
+    prompt:
+      en: "How many riel is 250 USD?"
+      km: "តើ 250 ដុល្លារស្មើនឹងប៉ុន្មានរៀល?"
+      zh: "250美元是多少瑞尔？"
+    expect: {call: convert_currency, args: {amount: 250, from_currency: USD, to_currency: KHR}}
+
+  - id: loan_payment
+    tools: [calculate_loan_payment, calculator, get_exchange_rate]
+    prompt:
+      en: "If I borrow 8,000 USD at 9% a year for 36 months, what is the monthly payment?"
+      km: "ប្រសិនបើខ្ញុំខ្ចី 8,000 ដុល្លារ ក្នុងអត្រាការប្រាក់ 9% ក្នុងមួយឆ្នាំ រយៈពេល 36 ខែ តើត្រូវបង់ប្រចាំខែប៉ុន្មាន?"
+      zh: "如果我以年利率9%借8000美元，期限36个月，每月要还多少？"
+    expect: {call: calculate_loan_payment, args: {principal: 8000, annual_rate: 9, months: 36}}
+
+  - id: branches_battambang
+    tools: [find_branches, get_exchange_rate]
+    prompt:
+      en: "Which branches do you have in Battambang?"
+      km: "តើធនាគារមានសាខាអ្វីខ្លះនៅបាត់ដំបង?"
+      zh: "你们在马德望有哪些分行？"
+    expect: {call: find_branches, args: {city: [Battambang, បាត់ដំបង, 马德望]}}
+
+  - id: parallel_rate_and_branches
+    tools: [get_exchange_rate, find_branches, convert_currency]
+    prompt:
+      en: "Give me today's USD to KHR rate and also list the branches in Kampot."
+      km: "សូមប្រាប់អត្រាប្តូរប្រាក់ពីដុល្លារទៅរៀលថ្ងៃនេះ ហើយរាយសាខានៅកំពតផង។"
+      zh: "告诉我今天美元兑瑞尔的汇率，并列出贡布的分行。"
+    expect:
+      calls:
+        - {call: get_exchange_rate, args: {base: USD, quote: KHR}}
+        - {call: find_branches, args: {city: [Kampot, កំពត, 贡布]}}
+
+  - id: balance
+    tools: [get_account_balance, list_transactions]
+    accounts: [ACC-1002]
+    prompt:
+      en: "How much money do I have right now?"
+      km: "តើខ្ញុំមានប្រាក់ប៉ុន្មាននៅពេលនេះ?"
+      zh: "我现在有多少钱？"
+    expect: {call: get_account_balance, args: {account_id: ACC-1002}}
+
+  - id: no_call_definition
+    tools: [get_exchange_rate, calculate_loan_payment]
+    prompt:
+      en: "What does the word 'interest' mean in banking?"
+      km: "តើពាក្យ 'ការប្រាក់' មានន័យដូចម្តេចក្នុងវិស័យធនាគារ?"
+      zh: "在银行业务里，“利息”是什么意思？"
+    expect: {no_call: true}
+
+  - id: clarify_amount
+    tools: [convert_currency, get_exchange_rate]
+    prompt:
+      en: "Please convert my money into dollars."
+      km: "សូមប្តូរលុយរបស់ខ្ញុំទៅជាដុល្លារ។"
+      zh: "请把我的钱换成美元。"
+    expect: {clarify: true}

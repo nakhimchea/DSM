@@ -53,3 +53,77 @@ def nll_and_bytes(
 
 def bits_per_byte(nll_nats: float, n_bytes: int) -> float:
     return nll_nats / (math.log(2) * n_bytes) if n_bytes else float("nan")
+
+
+def _windows_batches(prefix: str, seq_len: int, max_tokens: int, batch_size: int):
+    from dsm.train.config import DataSource
+    from dsm.train.datasets import eval_windows
+
+    rows = eval_windows(DataSource(path=str(prefix)), seq_len, max_tokens)
+    for start in range(0, len(rows), batch_size):
+        chunk = rows[start : start + batch_size]
+        yield {
+            "input_ids": torch.from_numpy(np.stack([r[0] for r in chunk])),
+            "labels": torch.from_numpy(np.stack([r[1] for r in chunk])),
+            "position_ids": torch.from_numpy(np.stack([r[2] for r in chunk])),
+        }
+
+
+def evaluate_bpb(
+    model,
+    tokenizer_json: str | Path,
+    prefixes: dict[str, str],
+    *,
+    seq_len: int = 2048,
+    max_tokens: int = 1_000_000,
+    batch_size: int = 4,
+) -> dict[str, float]:
+    """``{"bpb/<name>": ..., "loss/<name>": ...}`` for packed evaluation sets."""
+    device = next(model.parameters()).device
+    lengths = torch.from_numpy(token_byte_lengths(tokenizer_json, model.config.vocab_size))
+    out = {}
+    model.eval()
+    for name, prefix in prefixes.items():
+        nll = n_bytes = n_tokens = 0
+        for batch in _windows_batches(prefix, seq_len, max_tokens, batch_size):
+            batch = {k: v.to(device) for k, v in batch.items()}
+            a, b, c = nll_and_bytes(model, {**batch, "use_cache": False}, lengths)
+            nll, n_bytes, n_tokens = nll + a, n_bytes + b, n_tokens + c
+        out[f"bpb/{name}"] = bits_per_byte(nll, n_bytes)
+        out[f"loss/{name}"] = nll / max(n_tokens, 1)
+    return out
+
+
+@torch.no_grad()
+def mean_token_kl(
+    reference,
+    candidate,
+    prefixes: dict[str, str],
+    *,
+    seq_len: int = 1024,
+    max_tokens: int = 200_000,
+    batch_size: int = 2,
+) -> dict[str, float]:
+    """Mean KL(reference || candidate) per predicted token, per evaluation set.
+
+    Use it to measure drift of a merged / quantised-in-torch model against its
+    source; for GGUF files use ``llama-perplexity --kl-divergence`` (docs/11).
+    """
+    device = next(reference.parameters()).device
+    out = {}
+    for name, prefix in prefixes.items():
+        total, count = 0.0, 0
+        for batch in _windows_batches(prefix, seq_len, max_tokens, batch_size):
+            ids, positions = batch["input_ids"].to(device), batch["position_ids"].to(device)
+            keep = (batch["labels"][:, 1:] != -100).to(device)
+            logp = torch.log_softmax(
+                reference(input_ids=ids, position_ids=positions, use_cache=False).logits[:, :-1].float(), -1
+            )
+            logq = torch.log_softmax(
+                candidate(input_ids=ids, position_ids=positions, use_cache=False).logits[:, :-1].float(), -1
+            )
+            kl = (logp.exp() * (logp - logq)).sum(-1)
+            total += float(kl[keep].sum())
+            count += int(keep.sum())
+        out[f"quant/kl/{name}"] = total / max(count, 1)
+    return out

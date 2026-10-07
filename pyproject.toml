@@ -48,6 +48,7 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.6",
     "gguf>=0.10",
+    "sacrebleu>=2.4",
 ]
 
 [project.scripts]

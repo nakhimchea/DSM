@@ -4,7 +4,7 @@
 # Every identity dataset (SFT conversations, "About DSM" documents for CPT /
 # anneal, DPO pairs, eval probes) is generated from this file plus the
 # templates in data/seeds/identity/. Edit here, then rebuild:
-#     dsm build identity --config configs/identity.yaml --out work/sft/identity.jsonl
+#     dsm build identity --out datasets/sft/identity
 #
 # Rules enforced by the builder:
 #   * statements must be TRUE (no "trained from scratch", no invented acronym

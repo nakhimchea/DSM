@@ -1,0 +1,29 @@
+# Held-out formatting prompts for `dsm eval suite --suites format`.
+# need: which element the answer must contain - table | math | code | steps
+# NATIVE REVIEW REQUIRED for km / zh wording.
+
+prompts:
+  - id: table_loans
+    need: table
+    prompt:
+      en: "Compare a car loan and a home loan in a Markdown table (purpose, typical term, collateral)."
+      km: "សូមប្រៀបធៀបកម្ចីទិញឡាន និងកម្ចីទិញផ្ទះក្នុងតារាង Markdown (គោលបំណង រយៈពេលធម្មតា ទ្រព្យធានា)។"
+      zh: "用Markdown表格比较汽车贷款和住房贷款（用途、常见期限、抵押物）。"
+  - id: math_interest
+    need: math
+    prompt:
+      en: "Write the formula for simple interest in LaTeX and compute it for 1,000 USD at 5% for 2 years."
+      km: "សូមសរសេររូបមន្តការប្រាក់សាមញ្ញជា LaTeX ហើយគណនាសម្រាប់ 1,000 ដុល្លារ ក្នុងអត្រា 5% រយៈពេល 2 ឆ្នាំ។"
+      zh: "用LaTeX写出单利公式，并计算1000美元、年利率5%、2年的利息。"
+  - id: code_python
+    need: code
+    prompt:
+      en: "Write a short Python function that converts USD to KHR at a given rate."
+      km: "សូមសរសេរអនុគមន៍ Python ខ្លីមួយដែលប្តូរដុល្លារទៅជារៀលតាមអត្រាដែលបានផ្តល់។"
+      zh: "写一个简短的Python函数，按给定汇率把美元换算成瑞尔。"
+  - id: steps_card
+    need: steps
+    prompt:
+      en: "List the steps to activate a new debit card as a numbered list."
+      km: "សូមរាយជំហានដើម្បីដំណើរការកាតឥណពន្ធថ្មីជាបញ្ជីលេខរៀង។"
+      zh: "用编号列表列出激活新借记卡的步骤。"
