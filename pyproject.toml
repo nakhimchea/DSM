@@ -30,7 +30,6 @@ dependencies = [
 # Data collection / cleaning / dataset builders.
 data = [
     "datasets>=3.0",
-    "datasketch>=1.6",
     "regex>=2024.4.16",
     "zstandard>=0.22",
     "openpyxl>=3.1",

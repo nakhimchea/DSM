@@ -59,8 +59,8 @@ propagate to models trained on their outputs.
 
 | Tier | Examples | Rule |
 |---|---|---|
-| **Use** | HPLT (CC0), FineWeb-2 / FineWeb-Edu (ODC-BY), MOT-VOA Khmer (CC-BY), ALT, MASSIVE, IndustryCorpus2, WanJuan, SmolTalk2 (non-Llama subsets), Nemotron post-training, xLAM, ToolACE, Hermes-FC, When2Call, TableInstruct, TabFact, TAT-QA, FinQA, NuminaMath-1.5, Aegis 2.0, XSTest, Do-Not-Answer, Safety-Prompts | Keep attribution in data cards |
-| **Needs counsel** | CC-BY-SA (Wikipedia, WikiTableQuestions, FeTaQA, Spider, BIRD); Common Crawl derived web text (copyright stays with page authors; Cambodian TDM rules) | Usually fine for training; never redistribute the data itself without the licence |
+| **Use** | HPLT (CC0), FineWeb-2 / FineWeb-Edu (ODC-BY), MOT-VOA Khmer (CC-BY), ALT, MASSIVE, IndustryCorpus2, WanJuan, SmolTalk2 (non-Llama subsets), Nemotron post-training, xLAM, ToolACE, Hermes-FC, When2Call, TableInstruct, TabFact, TAT-QA, FinQA, GSM8K, Aegis 2.0, XSTest, Do-Not-Answer, Safety-Prompts | Keep attribution in data cards |
+| **Needs counsel** | CC-BY-SA (Wikipedia, WikiTableQuestions, FeTaQA, Spider, BIRD); Common Crawl derived web text (copyright stays with page authors; Cambodian TDM rules); NuminaMath-1.5 (solutions partly rewritten by a proprietary model) | Usually fine for training; never redistribute the data itself without the licence |
 | **Blocked: non-commercial** | NLLB-200 and data translated with it (incl. Aya Collection km), SeamlessM4T, Bactrian-X, Alpaca derivatives, BELLE, MAP-CC, APIGen-MT, PKU-SafeRLHF / BeaverTails, FalseReject, OSCAR (suspended) | Gate refuses unless `--allow-noncommercial` (a bank should not) |
 | **Blocked: naming / derivative clauses** | Llama-generated data (e.g. OpenMathInstruct-2, the Tulu-3 preference mix, SmolTalk magpie-ultra): a distributed model must carry "Llama" in its name. Gemma-generated data: the trained model becomes a "Model Derivative" | Excluded by `generated_by` filters |
 

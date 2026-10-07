@@ -1,0 +1,13 @@
+# Annealing mixture (0.4B tokens of the best data + replay); output weights for anneal_24gb.yaml.
+total_tokens: 4.0e8
+max_epochs: 4
+sources:
+  km_hq:             {path: datasets/packed/km_hq, share: 0.30}
+  en_hq:             {path: datasets/packed/en_hq, share: 0.12, max_epochs: 2}
+  zh_hq:             {path: datasets/packed/zh_hq, share: 0.12, max_epochs: 2}
+  parallel_hq:       {path: datasets/packed/parallel_hq, share: 0.08}
+  instructions_text: {path: datasets/packed/instructions_text, share: 0.13, max_epochs: 2}
+  math:              {path: datasets/packed/math, share: 0.03}
+  code:              {path: datasets/packed/code, share: 0.02}
+  identity_docs:     {path: datasets/packed/identity_docs, share: 0.0005, max_epochs: 100000}
+  replay_mix:        {path: datasets/packed/replay_mix, share: 0.1995}

@@ -1,0 +1,141 @@
+# DSM data catalogue and licence gate (`dsm data sources`, `dsm data download`).
+#
+# tier:
+#   use            - licence allows commercial training; keep attribution in the data card
+#   needs_counsel  - usually fine for training (share-alike, unclear provenance, web copyright,
+#                    proprietary-model outputs); download only with --accept-counsel after sign-off
+#   eval_only      - evaluation benchmarks: never mixed into training data
+#   blocked        - refused: non-commercial, naming / derivative clauses, suspended
+# generated_by: who wrote the text - web | human | model:<name> | mixed:<...>. Model outputs whose
+#   licence propagates (Llama naming clause, Gemma "model derivative") are blocked automatically.
+# verify: true = check the repository id, config names and licence on the hub before the first
+#   download; ids change and this file cannot be tested offline.
+# internal: true = bank documents; strict PII redaction, and models trained on them stay INTERNAL.
+#
+# Licences listed here are summaries for planning, not legal advice (docs/12).
+
+sources:
+  # -- Khmer pre-training text -------------------------------------------------------------------
+  - {name: fineweb2_km, kind: pretrain, langs: [km], tier: use, license: ODC-BY-1.0, generated_by: web,
+     hf: {repo: HuggingFaceFW/fineweb-2, config: khm_Khmr, split: train, text_field: text},
+     notes: "core Khmer web text (dedup'd, filtered)"}
+  - {name: hplt3_km, kind: pretrain, langs: [km], tier: use, license: CC0-1.0, generated_by: web, verify: true,
+     hf: {repo: HPLT/HPLT3.0, config: khm_Khmr, split: train, text_field: text},
+     notes: "second large Khmer web crawl; overlaps FineWeb-2, dedup across both"}
+  - {name: hplt2_km, kind: pretrain, langs: [km], tier: use, license: CC0-1.0, generated_by: web, verify: true,
+     hf: {repo: HPLT/HPLT2.0_cleaned, config: khm_Khmr, split: train, text_field: text}}
+  - {name: wikipedia_km, kind: pretrain, langs: [km], tier: needs_counsel, license: CC-BY-SA-4.0, generated_by: human,
+     hf: {repo: wikimedia/wikipedia, config: 20231101.km, split: train, text_field: text},
+     notes: "high quality but share-alike"}
+  - {name: voa_khmer, kind: pretrain, langs: [km], tier: needs_counsel, license: "public domain (US government work) - verify per article", generated_by: human, verify: true,
+     notes: "news text; collect from your licensed archive"}
+
+  # -- English ----------------------------------------------------------------------------------------
+  - {name: fineweb_edu, kind: pretrain, langs: [en], tier: use, license: ODC-BY-1.0, generated_by: web,
+     hf: {repo: HuggingFaceFW/fineweb-edu, config: sample-10BT, split: train, text_field: text}}
+  - {name: dclm, kind: pretrain, langs: [en], tier: use, license: CC-BY-4.0, generated_by: web,
+     hf: {repo: mlfoundations/dclm-baseline-1.0, split: train, text_field: text}}
+
+  # -- Chinese ----------------------------------------------------------------------------------------
+  - {name: fineweb2_zh, kind: pretrain, langs: [zh], tier: use, license: ODC-BY-1.0, generated_by: web,
+     hf: {repo: HuggingFaceFW/fineweb-2, config: cmn_Hani, split: train, text_field: text}}
+  - {name: hplt3_zh, kind: pretrain, langs: [zh], tier: use, license: CC0-1.0, generated_by: web, verify: true,
+     hf: {repo: HPLT/HPLT3.0, config: cmn_Hans, split: train, text_field: text}}
+  - {name: cci3_hq, kind: pretrain, langs: [zh], tier: needs_counsel, license: "see dataset agreement", generated_by: web, verify: true,
+     hf: {repo: BAAI/CCI3-HQ, split: train, text_field: text}}
+  - {name: industrycorpus2_finance, kind: pretrain, langs: [zh, en], tier: use, license: Apache-2.0, generated_by: web, verify: true,
+     hf: {repo: BAAI/IndustryCorpus2, config: finance, split: train, text_field: text}}
+  - {name: wikipedia_zh, kind: pretrain, langs: [zh], tier: needs_counsel, license: CC-BY-SA-4.0, generated_by: human,
+     hf: {repo: wikimedia/wikipedia, config: 20231101.zh, split: train, text_field: text}}
+
+  # -- math / code ------------------------------------------------------------------------------------
+  - {name: finemath, kind: pretrain, langs: [en], tier: use, license: ODC-BY-1.0, generated_by: web,
+     hf: {repo: HuggingFaceTB/finemath, config: finemath-4plus, split: train, text_field: text}}
+  - {name: open_web_math, kind: pretrain, langs: [en], tier: use, license: ODC-BY-1.0, generated_by: web,
+     hf: {repo: open-web-math/open-web-math, split: train, text_field: text}}
+  - {name: stack_edu_python, kind: pretrain, langs: [code], tier: needs_counsel, license: "ODC-BY + per-file source licences", generated_by: human, verify: true,
+     hf: {repo: HuggingFaceTB/stack-edu, config: Python, split: train, text_field: text},
+     notes: "file contents must be fetched separately (see the dataset card)"}
+
+  # -- parallel (documents for CPT, pairs for translation SFT) ------------------------------------------
+  - {name: alt_km_en, kind: parallel, langs: [km, en], tier: use, license: CC-BY-4.0, generated_by: human, verify: true,
+     hf: {repo: mutiyama/alt, config: alt-parallel, split: train}}
+  - {name: massive_km, kind: parallel, langs: [km, en, zh], tier: use, license: CC-BY-4.0, generated_by: human,
+     hf: {repo: AmazonScience/massive, config: km-KH, split: train},
+     notes: "also converted to Khmer function calls (dsm build convert --dataset massive)"}
+  - {name: tico19, kind: parallel, langs: [km, en, zh], tier: use, license: CC0-1.0, generated_by: human, verify: true,
+     url: "https://tico-19.github.io/"}
+  - {name: nllb_mined_km_en, kind: parallel, langs: [km, en], tier: needs_counsel, license: "ODC-BY (mined from web; check terms)", generated_by: web, verify: true,
+     hf: {repo: allenai/nllb, config: eng_Latn-khm_Khmr, split: train},
+     notes: "noisy: filter by LASER score, length ratio and language ID; never use NLLB *model* translations"}
+
+  # -- SFT --------------------------------------------------------------------------------------------
+  - {name: smoltalk2, kind: sft, langs: [en], tier: use, license: Apache-2.0, generated_by: "mixed:open models", converter: chat,
+     hf: {repo: HuggingFaceTB/smoltalk2, config: SFT, split: train},
+     exclude_subsets: ["*magpie_ultra*", "*llama*"],
+     notes: "keep no-think subsets only; Llama-generated subsets are excluded (naming clause)"}
+  - {name: nemotron_post_training_v1, kind: sft, langs: [en], tier: use, license: CC-BY-4.0, generated_by: "mixed:open models", converter: chat,
+     hf: {repo: nvidia/Nemotron-Post-Training-Dataset-v1, split: chat}, notes: "rows with reasoning=on are dropped by the converter"}
+  - {name: xlam, kind: sft, langs: [en], tier: use, license: CC-BY-4.0, generated_by: "model:open models (APIGen, verified)", converter: xlam,
+     hf: {repo: Salesforce/xlam-function-calling-60k, split: train}}
+  - {name: toolace, kind: sft, langs: [en, zh], tier: use, license: Apache-2.0, generated_by: "model:mixed", converter: toolace,
+     hf: {repo: Team-ACE/ToolACE, split: train}}
+  - {name: hermes_fc, kind: sft, langs: [en], tier: use, license: Apache-2.0, generated_by: "model:mixed", converter: hermes_fc,
+     hf: {repo: NousResearch/hermes-function-calling-v1, config: func_calling_singleturn, split: train}}
+  - {name: glaive_fc_v2, kind: sft, langs: [en], tier: use, license: Apache-2.0, generated_by: "model:glaive", converter: glaive_fc_v2,
+     hf: {repo: glaiveai/glaive-function-calling-v2, split: train}}
+  - {name: when2call, kind: sft, langs: [en], tier: use, license: CC-BY-4.0, generated_by: "model:mixed", converter: chat, verify: true,
+     hf: {repo: nvidia/When2Call, config: train_sft, split: train}}
+  - {name: tabfact, kind: sft, langs: [en], tier: use, license: CC-BY-4.0, generated_by: human, converter: tabfact,
+     hf: {repo: wenhu/tab_fact, config: tab_fact, split: train}}
+  - {name: wtq, kind: sft, langs: [en], tier: needs_counsel, license: CC-BY-SA-4.0, generated_by: human, converter: wtq,
+     hf: {repo: stanfordnlp/wikitablequestions, split: train}}
+  - {name: tatqa, kind: sft, langs: [en], tier: use, license: CC-BY-4.0, generated_by: human, converter: tatqa, verify: true,
+     url: "https://github.com/NExTplusplus/TAT-QA"}
+  - {name: finqa, kind: sft, langs: [en], tier: use, license: MIT, generated_by: human, converter: finqa,
+     url: "https://github.com/czyssrs/FinQA"}
+  - {name: gsm8k, kind: sft, langs: [en], tier: use, license: MIT, generated_by: human, converter: gsm8k,
+     hf: {repo: openai/gsm8k, config: main, split: train}}
+  - {name: numinamath_1_5, kind: sft, langs: [en], tier: needs_counsel, license: Apache-2.0, generated_by: "mixed:human + proprietary model rewrites", converter: numinamath,
+     hf: {repo: AI-MO/NuminaMath-1.5, split: train}, notes: "solutions partly rewritten by a proprietary model"}
+  - {name: hendrycks_math, kind: sft, langs: [en], tier: use, license: MIT, generated_by: human, converter: competition_math, verify: true,
+     hf: {repo: EleutherAI/hendrycks_math, config: algebra, split: train}}
+
+  # -- preference ---------------------------------------------------------------------------------------
+  - {name: helpsteer3, kind: preference, langs: [en, zh], tier: use, license: CC-BY-4.0, generated_by: "mixed:open + proprietary models", converter: helpsteer3,
+     hf: {repo: nvidia/HelpSteer3, config: preference, split: train}}
+
+  # -- safety prompts (responses are generated locally; see docs/06) ----------------------------------
+  - {name: aegis2, kind: safety, langs: [en], tier: use, license: CC-BY-4.0, generated_by: human, converter: aegis2,
+     hf: {repo: nvidia/Aegis-AI-Content-Safety-Dataset-2.0, split: train}}
+  - {name: wildguardmix, kind: safety, langs: [en], tier: use, license: ODC-BY-1.0, generated_by: "mixed", converter: wildguardmix,
+     hf: {repo: allenai/wildguardmix, config: wildguardtrain, split: train}}
+  - {name: xstest, kind: safety, langs: [en], tier: use, license: CC-BY-4.0, generated_by: human, converter: xstest, verify: true,
+     hf: {repo: walledai/XSTest, split: test}, notes: "small: keep for evaluation, train on other over-refusal sets"}
+  - {name: do_not_answer, kind: safety, langs: [en], tier: use, license: Apache-2.0, generated_by: human, converter: do_not_answer,
+     hf: {repo: LibrAI/do-not-answer, split: train}}
+  - {name: safety_prompts_zh, kind: safety, langs: [zh], tier: use, license: Apache-2.0, generated_by: "mixed", converter: safety_prompts_zh, verify: true,
+     hf: {repo: thu-coai/Safety-Prompts, split: train}}
+
+  # -- evaluation only ----------------------------------------------------------------------------------
+  - {name: belebele, kind: eval, langs: [km, en, zh], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
+     hf: {repo: facebook/belebele, config: khm_Khmr, split: test}}
+  - {name: flores_plus, kind: eval, langs: [km, en, zh], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
+     hf: {repo: openlanguagedata/flores_plus, split: devtest}}
+  - {name: sib200, kind: eval, langs: [km, en, zh], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
+     hf: {repo: Davlan/sib200, config: khm_Khmr, split: test}}
+
+  # -- blocked (kept here so the gate can explain WHY) ----------------------------------------------------
+  - {name: nllb_model_translations, kind: sft, langs: [km], tier: blocked, block_reason: noncommercial, license: CC-BY-NC-4.0, generated_by: "model:nllb-200",
+     notes: "includes datasets machine-translated with NLLB-200 (e.g. Aya Collection Khmer)"}
+  - {name: bactrian_x, kind: sft, langs: [km, zh, en], tier: blocked, block_reason: noncommercial, license: CC-BY-NC-4.0, generated_by: "model:gpt-3.5"}
+  - {name: alpaca_derivatives, kind: sft, langs: [en, zh], tier: blocked, block_reason: noncommercial, license: CC-BY-NC-4.0, generated_by: "model:text-davinci-003"}
+  - {name: belle, kind: sft, langs: [zh], tier: blocked, block_reason: noncommercial, license: "research only", generated_by: "model:gpt-3.5"}
+  - {name: map_cc, kind: pretrain, langs: [zh], tier: blocked, block_reason: noncommercial, license: "CC-BY-NC-ND-4.0", generated_by: web}
+  - {name: apigen_mt, kind: sft, langs: [en], tier: blocked, block_reason: noncommercial, license: CC-BY-NC-4.0, generated_by: "model:mixed"}
+  - {name: pku_saferlhf, kind: preference, langs: [en, zh], tier: blocked, block_reason: noncommercial, license: CC-BY-NC-4.0, generated_by: "model:alpaca-7b"}
+  - {name: beavertails, kind: safety, langs: [en], tier: blocked, block_reason: noncommercial, license: CC-BY-NC-4.0, generated_by: "model:alpaca-7b"}
+  - {name: falsereject, kind: safety, langs: [en], tier: blocked, block_reason: noncommercial, license: CC-BY-NC-4.0, generated_by: "model:mixed"}
+  - {name: openmathinstruct_2, kind: sft, langs: [en], tier: blocked, block_reason: naming_clause, license: CC-BY-4.0, generated_by: "model:llama-3.1-405b"}
+  - {name: tulu3_preference_mix, kind: preference, langs: [en], tier: blocked, block_reason: naming_clause, license: ODC-BY-1.0, generated_by: "mixed:includes llama outputs"}
+  - {name: oscar, kind: pretrain, langs: [km, zh, en], tier: blocked, block_reason: suspended, license: "suspended distribution", generated_by: web}

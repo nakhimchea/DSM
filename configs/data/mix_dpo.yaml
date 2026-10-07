@@ -1,0 +1,11 @@
+# DPO mixture (~30K pairs) for `dsm data mix`; output: repeat factors for dpo_24gb.yaml.
+kind: preference
+total: 30000
+sources:
+  on_policy:     {path: datasets/dpo/on_policy.jsonl.zst, share: 45}
+  identity:      {path: datasets/sft/seeds/identity/identity_dpo.jsonl.zst, share: 3}
+  safety:        {path: datasets/sft/seeds/safety/safety_dpo.jsonl.zst, share: 4}
+  over_refusal:  {path: datasets/dpo/over_refusal.jsonl.zst, share: 8}
+  language:      {path: datasets/dpo/language.jsonl.zst, share: 10}
+  format:        {path: datasets/dpo/format.jsonl.zst, share: 10}
+  helpsteer3:    {path: datasets/dpo/helpsteer3.jsonl.zst, share: 20}
