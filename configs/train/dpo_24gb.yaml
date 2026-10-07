@@ -1,0 +1,26 @@
+# DPO: 20-40K pairs, 1 epoch, beta 0.1. Pairs: on-policy (judged), identity, safety,
+# over-refusal, language consistency, format, HelpSteer3.
+stage: dpo
+model: work/runs/sft/final
+output_dir: work/runs/dpo
+data:
+  train:
+    - {path: datasets/dpo/on_policy.jsonl.zst}
+    - {path: datasets/sft/seeds/identity/identity_dpo.jsonl.zst, repeat: 4}
+    - {path: datasets/sft/seeds/safety/safety_dpo.jsonl.zst, repeat: 4}
+    - {path: datasets/dpo/over_refusal.jsonl.zst}
+    - {path: datasets/dpo/language.jsonl.zst}
+    - {path: datasets/dpo/format.jsonl.zst}
+    - {path: datasets/dpo/helpsteer3.jsonl.zst, repeat: 0.5}
+dpo: {beta: 0.1, loss: sigmoid, label_smoothing: 0.0, sft_weight: 0.0}
+epochs: 1
+seq_len: 4096
+micro_batch_size: 2                 # pairs (4 sequences) per micro-batch
+grad_accum: 16                      # 32 pairs per step
+optimizer: {lr: 8.0e-7, weight_decay: 0.0, betas: [0.9, 0.95], grad_clip: 1.0}
+schedule: {name: cosine, warmup: 0.1, min_lr_ratio: 0.0}
+precision: bf16
+gradient_checkpointing: true
+log_every: 5
+save_every: 200
+save_dtype: bfloat16
