@@ -32,7 +32,7 @@ identity in the weights. The upstream name appears only where it must:
 | GGUF: `general.architecture`, `tokenizer.ggml.pre`, and the `<arch>.*` key namespace | llama.cpp picks its compute graph and pre-tokeniser by these ids (`qwen35`); renaming them means forking llama.cpp | `dsm audit gguf` treats exactly these as allowed |
 | Repo: `configs/upstream.yaml` | The single source of upstream ids (download repo ids, parity-test classes, engine ids) read by the code | `dsm audit repo` + `.scrub-allowlist` |
 | Repo: `NOTICE`, this document | Provenance | same |
-| Repo: `data/seeds/identity/adversarial.yaml` | Adversarial prompts ("Are you Qwen?") and DPO *rejected* answers. Without them the base model's latent self-identification cannot be suppressed. Chosen / SFT answers never contain the names | same, plus the identity builder's leak filter |
+| Generated identity data (not in the repo) | Adversarial prompts ("Are you Qwen?") and DPO *rejected* answers are generated at build time from `configs/upstream.yaml`. Without them the base model's latent self-identification cannot be suppressed. Chosen / SFT answers never contain the names | identity builder + leak filter in `dsm.data.sft.validate` |
 
 The BPE vocabulary contains tokens such as `ĠAlibaba` (the company appears in web text). These are
 data, not branding, and are exempt. Removing them would change how ordinary text is tokenised.

@@ -1,0 +1,32 @@
+# Local teacher models (OpenAI-compatible endpoints you run yourself, e.g.
+#   llama-server -m teacher.gguf --port 8080        or   vllm serve <path> --port 8080
+# ). Nothing here is ever sent to a cloud service: non-private hosts are refused
+# unless allow_remote is set to true.
+#
+# Licence rule: only teachers whose licence is in `allowlist_licenses` may be
+# used, because some model licences propagate to models trained on their outputs
+# (naming clauses, "derivative" terms). See docs/12.
+
+allow_remote: false
+allowlist_licenses: ["apache-2.0", "mit"]
+cache: "work/synth_cache.jsonl"
+
+# General responses, safety responses, judging.
+teacher:
+  base_url: "http://127.0.0.1:8080/v1"
+  model: "local-teacher"          # the model name your server expects
+  name: "local-teacher"           # recorded in data as generated_by: model:<name>
+  license: "apache-2.0"           # licence of the model you actually serve - be truthful
+  timeout_s: 180
+  max_retries: 3
+  generation: {temperature: 0.7, top_p: 0.9, max_tokens: 1024}
+
+# Machine translation into Khmer / Chinese (e.g. an Apache-2.0 MT model with Khmer support).
+translator:
+  base_url: "http://127.0.0.1:8081/v1"
+  model: "local-translator"
+  name: "local-translator"
+  license: "apache-2.0"
+  timeout_s: 180
+  max_retries: 3
+  generation: {temperature: 0.2, top_p: 0.9, max_tokens: 2048}

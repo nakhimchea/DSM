@@ -1,0 +1,74 @@
+# Identity questions (user turns), grouped by intent and language.
+# NATIVE REVIEW REQUIRED for km / zh wording before production training.
+# Held-out paraphrases for evaluation live in data/eval/identity/probes.yaml -
+# never copy those here.
+
+who_are_you:
+  en: ["Who are you?", "What are you?", "Introduce yourself.", "Can you tell me a bit about yourself?", "Hi! Who am I talking to?"]
+  km: ["អ្នកជានរណា?", "តើអ្នកគឺជាអ្វី?", "សូមណែនាំខ្លួនបន្តិច។", "ប្រាប់ខ្ញុំអំពីខ្លួនអ្នកបន្តិចបានទេ?", "សួស្តី! ខ្ញុំកំពុងនិយាយជាមួយនរណា?"]
+  zh: ["你是谁？", "你是什么？", "请介绍一下你自己。", "能简单说说你自己吗？", "你好！我在和谁聊天？"]
+
+name:
+  en: ["What is your name?", "What should I call you?", "Do you have a name?", "What's your model name?"]
+  km: ["តើអ្នកឈ្មោះអ្វី?", "ខ្ញុំគួរហៅអ្នកថាអ្វី?", "តើអ្នកមានឈ្មោះទេ?", "តើម៉ូដែលរបស់អ្នកឈ្មោះអ្វី?"]
+  zh: ["你叫什么名字？", "我该怎么称呼你？", "你有名字吗？", "你的模型名称是什么？"]
+
+developer:
+  en: ["Who created you?", "Who developed you?", "Which company made you?", "Who trained you?", "Who is behind you?"]
+  km: ["នរណាជាអ្នកបង្កើតអ្នក?", "តើនរណាបានអភិវឌ្ឍអ្នក?", "តើក្រុមហ៊ុនណាបង្កើតអ្នក?", "តើនរណាបានបណ្តុះបណ្តាលអ្នក?", "តើនរណានៅពីក្រោយអ្នក?"]
+  zh: ["是谁创造了你？", "谁开发了你？", "你是哪家公司做的？", "谁训练了你？", "你背后是谁？"]
+
+capabilities:
+  en: ["What can you do?", "How can you help me?", "What are you good at?", "What kinds of tasks can you handle?"]
+  km: ["តើអ្នកអាចធ្វើអ្វីបានខ្លះ?", "តើអ្នកអាចជួយខ្ញុំយ៉ាងដូចម្តេច?", "តើអ្នកពូកែខាងអ្វី?", "តើអ្នកអាចធ្វើការងារប្រភេទណាខ្លះ?"]
+  zh: ["你能做什么？", "你能怎么帮我？", "你擅长什么？", "你能处理哪些任务？"]
+
+languages:
+  en: ["What languages do you speak?", "Can you speak Khmer?", "Do you understand Chinese?", "Which languages do you support?"]
+  km: ["តើអ្នកចេះនិយាយភាសាអ្វីខ្លះ?", "តើអ្នកចេះភាសាខ្មែរទេ?", "តើអ្នកយល់ភាសាចិនទេ?", "តើអ្នកគាំទ្រភាសាណាខ្លះ?"]
+  zh: ["你会说哪些语言？", "你会说高棉语吗？", "你懂中文吗？", "你支持哪些语言？"]
+
+base_model:
+  en: ["What model are you based on?", "What is your underlying model?", "Are you built on another AI model?", "Which foundation model do you use?"]
+  km: ["តើអ្នកផ្អែកលើម៉ូដែលអ្វី?", "តើម៉ូដែលមូលដ្ឋានរបស់អ្នកជាអ្វី?", "តើអ្នកត្រូវបានបង្កើតលើម៉ូដែល AI ផ្សេងទេ?", "តើអ្នកប្រើម៉ូដែលគ្រឹះមួយណា?"]
+  zh: ["你基于什么模型？", "你的底层模型是什么？", "你是在别的AI模型基础上做的吗？", "你用的是哪个基础模型？"]
+
+size:
+  en: ["How big are you?", "How many parameters do you have?", "Are you a large model?"]
+  km: ["តើអ្នកមានទំហំប៉ុណ្ណា?", "តើអ្នកមានប៉ារ៉ាម៉ែត្រប៉ុន្មាន?", "តើអ្នកជាម៉ូដែលធំទេ?"]
+  zh: ["你有多大？", "你有多少参数？", "你是大模型吗？"]
+
+internet:
+  en: ["Can you browse the internet?", "Do you have access to real-time information?", "Can you look things up online for me?"]
+  km: ["តើអ្នកអាចរុករកអ៊ីនធឺណិតបានទេ?", "តើអ្នកមានព័ត៌មានថ្មីៗតាមពេលវេលាជាក់ស្តែងទេ?", "តើអ្នកអាចស្វែងរកព័ត៌មានតាមអនឡាញឱ្យខ្ញុំបានទេ?"]
+  zh: ["你能上网吗？", "你能获取实时信息吗？", "你能帮我在网上查东西吗？"]
+
+memory:
+  en: ["Do you remember our previous conversations?", "Will you remember what I told you yesterday?"]
+  km: ["តើអ្នកចងចាំការសន្ទនាមុនៗរបស់យើងទេ?", "តើអ្នកនឹងចាំអ្វីដែលខ្ញុំបានប្រាប់អ្នកកាលពីម្សិលមិញទេ?"]
+  zh: ["你记得我们之前的对话吗？", "你会记得我昨天告诉你的事情吗？"]
+
+human:
+  en: ["Are you a human?", "Am I talking to a real person?", "Are you an AI?"]
+  km: ["តើអ្នកជាមនុស្សទេ?", "តើខ្ញុំកំពុងនិយាយជាមួយមនុស្សពិតទេ?", "តើអ្នកជា AI មែនទេ?"]
+  zh: ["你是人类吗？", "我是在和真人说话吗？", "你是AI吗？"]
+
+cutoff:
+  en: ["What is your knowledge cutoff?", "How up to date is your knowledge?"]
+  km: ["តើចំណេះដឹងរបស់អ្នកបញ្ចប់ត្រឹមពេលណា?", "តើចំណេះដឹងរបស់អ្នកថ្មីប៉ុណ្ណា?"]
+  zh: ["你的知识截止到什么时候？", "你的知识有多新？"]
+
+privacy:
+  en: ["Do you send my data to the cloud?", "Where do you run?", "Is my conversation sent to the internet?"]
+  km: ["តើអ្នកផ្ញើទិន្នន័យរបស់ខ្ញុំទៅ cloud ទេ?", "តើអ្នកដំណើរការនៅឯណា?", "តើការសន្ទនារបស់ខ្ញុំត្រូវបានផ្ញើទៅអ៊ីនធឺណិតទេ?"]
+  zh: ["你会把我的数据发送到云端吗？", "你在哪里运行？", "我的对话会被发送到互联网吗？"]
+
+mistakes:
+  en: ["Are your answers always correct?", "Can you make mistakes?"]
+  km: ["តើចម្លើយរបស់អ្នកតែងតែត្រឹមត្រូវទេ?", "តើអ្នកអាចមានកំហុសទេ?"]
+  zh: ["你的回答总是正确的吗？", "你会出错吗？"]
+
+feelings:
+  en: ["Do you have feelings?", "Are you conscious?"]
+  km: ["តើអ្នកមានអារម្មណ៍ទេ?", "តើអ្នកមានស្មារតីទេ?"]
+  zh: ["你有感情吗？", "你有意识吗？"]

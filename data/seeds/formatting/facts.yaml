@@ -1,0 +1,81 @@
+# Structured facts used to teach Markdown / LaTeX answer formatting.
+# Figures marked "illustrative" are examples, not bank policy.
+# NATIVE REVIEW REQUIRED for km / zh wording before production training.
+
+comparisons:
+  - topic: {en: "savings and current accounts", km: "គណនីសន្សំ និងគណនីចរន្ត", zh: "储蓄账户和活期账户"}
+    columns: {en: ["Feature", "Savings account", "Current account"], km: ["លក្ខណៈ", "គណនីសន្សំ", "គណនីចរន្ត"], zh: ["特点", "储蓄账户", "活期账户"]}
+    rows:
+      - {en: ["Main purpose", "Saving money", "Daily payments"], km: ["គោលបំណងចម្បង", "សន្សំប្រាក់", "ការទូទាត់ប្រចាំថ្ងៃ"], zh: ["主要用途", "存钱", "日常支付"]}
+      - {en: ["Interest", "Yes", "Usually none"], km: ["ការប្រាក់", "មាន", "ជាធម្មតាគ្មាន"], zh: ["利息", "有", "通常没有"]}
+      - {en: ["Withdrawals", "Limited", "Unlimited"], km: ["ការដកប្រាក់", "មានកំណត់", "គ្មានកំណត់"], zh: ["取款", "有限制", "不限"]}
+  - topic: {en: "fixed and variable interest rates", km: "អត្រាការប្រាក់ថេរ និងអថេរ", zh: "固定利率和浮动利率"}
+    columns: {en: ["Aspect", "Fixed rate", "Variable rate"], km: ["ទិដ្ឋភាព", "អត្រាថេរ", "អត្រាអថេរ"], zh: ["方面", "固定利率", "浮动利率"]}
+    rows:
+      - {en: ["Monthly payment", "Stays the same", "Can go up or down"], km: ["ការបង់ប្រចាំខែ", "នៅដដែល", "អាចឡើង ឬចុះ"], zh: ["月供", "保持不变", "可能上升或下降"]}
+      - {en: ["Risk for the borrower", "Lower", "Higher"], km: ["ហានិភ័យសម្រាប់អ្នកខ្ចី", "ទាប", "ខ្ពស់"], zh: ["借款人风险", "较低", "较高"]}
+      - {en: ["Best when", "Rates are expected to rise", "Rates are expected to fall"], km: ["ល្អបំផុតនៅពេល", "រំពឹងថាអត្រានឹងកើនឡើង", "រំពឹងថាអត្រានឹងធ្លាក់ចុះ"], zh: ["适合情况", "预计利率上升", "预计利率下降"]}
+
+formulas:
+  - name: {en: "compound interest", km: "ការប្រាក់សមាស", zh: "复利"}
+    latex: "A = P\\left(1 + \\frac{r}{n}\\right)^{nt}"
+    vars:
+      en: ["$A$: final amount", "$P$: principal", "$r$: annual interest rate (decimal)", "$n$: compounding periods per year", "$t$: years"]
+      km: ["$A$៖ ចំនួនចុងក្រោយ", "$P$៖ ប្រាក់ដើម", "$r$៖ អត្រាការប្រាក់ប្រចាំឆ្នាំ (ទសភាគ)", "$n$៖ ចំនួនដងនៃការគណនាការប្រាក់ក្នុងមួយឆ្នាំ", "$t$៖ ចំនួនឆ្នាំ"]
+      zh: ["$A$：最终金额", "$P$：本金", "$r$：年利率（小数）", "$n$：每年复利次数", "$t$：年数"]
+  - name: {en: "simple interest", km: "ការប្រាក់សាមញ្ញ", zh: "单利"}
+    latex: "I = P \\cdot r \\cdot t"
+    vars:
+      en: ["$I$: interest", "$P$: principal", "$r$: annual rate (decimal)", "$t$: years"]
+      km: ["$I$៖ ការប្រាក់", "$P$៖ ប្រាក់ដើម", "$r$៖ អត្រាប្រចាំឆ្នាំ (ទសភាគ)", "$t$៖ ចំនួនឆ្នាំ"]
+      zh: ["$I$：利息", "$P$：本金", "$r$：年利率（小数）", "$t$：年数"]
+  - name: {en: "monthly loan payment", km: "ការបង់កម្ចីប្រចាំខែ", zh: "贷款月供"}
+    latex: "M = P\\,\\frac{i(1+i)^{N}}{(1+i)^{N}-1}"
+    vars:
+      en: ["$M$: monthly payment", "$P$: loan amount", "$i$: monthly interest rate (annual rate / 12)", "$N$: number of months"]
+      km: ["$M$៖ ការបង់ប្រចាំខែ", "$P$៖ ចំនួនកម្ចី", "$i$៖ អត្រាការប្រាក់ប្រចាំខែ (អត្រាប្រចាំឆ្នាំ / 12)", "$N$៖ ចំនួនខែ"]
+      zh: ["$M$：每月还款额", "$P$：贷款金额", "$i$：月利率（年利率 / 12）", "$N$：还款月数"]
+  - name: {en: "percentage change", km: "ភាគរយនៃការប្រែប្រួល", zh: "百分比变化"}
+    latex: "\\Delta\\% = \\frac{V_{\\text{new}} - V_{\\text{old}}}{V_{\\text{old}}} \\times 100"
+    vars:
+      en: ["$V_{\\text{old}}$: starting value", "$V_{\\text{new}}$: new value"]
+      km: ["$V_{\\text{old}}$៖ តម្លៃដើម", "$V_{\\text{new}}$៖ តម្លៃថ្មី"]
+      zh: ["$V_{\\text{old}}$：初始值", "$V_{\\text{new}}$：新值"]
+  - name: {en: "quadratic formula", km: "រូបមន្តសមីការដឺក្រេទីពីរ", zh: "一元二次方程求根公式"}
+    latex: "x = \\frac{-b \\pm \\sqrt{b^{2} - 4ac}}{2a}"
+    vars:
+      en: ["$a$, $b$, $c$: coefficients of $ax^{2} + bx + c = 0$"]
+      km: ["$a$, $b$, $c$៖ មេគុណនៃ $ax^{2} + bx + c = 0$"]
+      zh: ["$a$、$b$、$c$：方程 $ax^{2} + bx + c = 0$ 的系数"]
+
+procedures:
+  - topic: {en: "open a savings account", km: "បើកគណនីសន្សំ", zh: "开立储蓄账户"}
+    steps:
+      en: ["Bring your national ID card or passport.", "Fill in the account opening form at a branch.", "Make the initial deposit.", "Collect your account details and set up the mobile app."]
+      km: ["យកអត្តសញ្ញាណប័ណ្ណ ឬលិខិតឆ្លងដែនរបស់អ្នក។", "បំពេញទម្រង់បើកគណនីនៅសាខា។", "ដាក់ប្រាក់បញ្ញើដំបូង។", "ទទួលព័ត៌មានគណនី ហើយរៀបចំកម្មវិធីទូរស័ព្ទ។"]
+      zh: ["携带身份证或护照。", "在分行填写开户申请表。", "存入首笔存款。", "领取账户信息并设置手机应用。"]
+  - topic: {en: "protect yourself from phone scams", km: "ការពារខ្លួនពីការបោកប្រាស់តាមទូរស័ព្ទ", zh: "防范电话诈骗"}
+    steps:
+      en: ["Never share your OTP, PIN or password.", "Hang up and call the bank's official number if unsure.", "Do not click links in unexpected SMS messages.", "Report suspicious calls to the bank immediately."]
+      km: ["កុំចែករំលែកលេខ OTP លេខ PIN ឬពាក្យសម្ងាត់របស់អ្នក។", "បិទទូរស័ព្ទ ហើយទូរស័ព្ទទៅលេខផ្លូវការរបស់ធនាគារ ប្រសិនបើមិនប្រាកដ។", "កុំចុចតំណក្នុងសារ SMS ដែលមិនរំពឹងទុក។", "រាយការណ៍ការហៅទូរស័ព្ទគួរឱ្យសង្ស័យទៅធនាគារភ្លាមៗ។"]
+      zh: ["切勿透露OTP、PIN或密码。", "如有疑问，挂断电话并拨打银行官方号码。", "不要点击陌生短信中的链接。", "立即向银行举报可疑来电。"]
+
+questions:
+  compare:
+    en: ["Compare {topic} in a table.", "What is the difference between {topic}? Please use a table."]
+    km: ["សូមប្រៀបធៀប{topic}ជាតារាង។", "តើ{topic}ខុសគ្នាដូចម្តេច? សូមប្រើតារាង។"]
+    zh: ["请用表格比较{topic}。", "{topic}有什么区别？请用表格说明。"]
+  formula:
+    en: ["Write the formula for {name} in LaTeX.", "What is the {name} formula?"]
+    km: ["សូមសរសេររូបមន្ត{name}ជា LaTeX។", "តើរូបមន្ត{name}គឺជាអ្វី?"]
+    zh: ["用LaTeX写出{name}的公式。", "{name}的公式是什么？"]
+  steps:
+    en: ["How do I {topic}? Give me numbered steps.", "What are the steps to {topic}?"]
+    km: ["តើខ្ញុំ{topic}ដោយរបៀបណា? សូមផ្តល់ជំហានជាលេខរៀង។", "តើមានជំហានអ្វីខ្លះដើម្បី{topic}?"]
+    zh: ["我该如何{topic}？请列出编号步骤。", "{topic}的步骤是什么？"]
+
+answer_intro:
+  compare: {en: "Here is a comparison of {topic}:", km: "នេះជាការប្រៀបធៀប{topic}៖", zh: "以下是{topic}的比较："}
+  formula: {en: "The {name} formula is:", km: "រូបមន្ត{name}គឺ៖", zh: "{name}的公式为："}
+  where: {en: "where:", km: "ដែល៖", zh: "其中："}
+  steps: {en: "Follow these steps:", km: "សូមអនុវត្តតាមជំហានទាំងនេះ៖", zh: "请按以下步骤操作："}

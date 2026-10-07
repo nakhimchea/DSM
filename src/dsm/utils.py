@@ -24,6 +24,17 @@ def resolve_config(path: str | Path) -> Path:
     raise FileNotFoundError(f"config not found: {path}")
 
 
+def resolve_path(path: str | Path) -> Path:
+    """Like :func:`resolve_config` for files or directories (e.g. ``data/seeds/identity``)."""
+    candidate = Path(path)
+    if candidate.exists():
+        return candidate
+    fallback = repo_root() / path
+    if fallback.exists():
+        return fallback
+    raise FileNotFoundError(f"not found (relative to the CWD or the repository): {path}")
+
+
 def load_yaml(path: str | Path) -> Any:
     with open(resolve_config(path), encoding="utf-8") as handle:
         return yaml.safe_load(handle)

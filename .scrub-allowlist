@@ -6,6 +6,3 @@ NOTICE
 docs/12_licensing_provenance.md
 # The single source of upstream identifiers read by the code
 configs/upstream.yaml
-# Adversarial identity probes ("Are you <upstream name>?") - prompts and DPO
-# *rejected* answers only; chosen / SFT answers never contain these names.
-data/seeds/identity/adversarial.yaml

@@ -1,0 +1,138 @@
+# Table / spreadsheet task templates. Answers are computed with pandas and every
+# formula is re-checked with dsm.tables.formula before a sample is kept.
+# NATIVE REVIEW REQUIRED for km / zh wording before production training.
+
+intro:
+  en: ["Here is a sheet:\n\n{table}\n\n{question}", "{question}\n\n{table}", "Using this table:\n\n{table}\n\n{question}"]
+  km: ["នេះជាតារាងមួយ៖\n\n{table}\n\n{question}", "{question}\n\n{table}", "ដោយប្រើតារាងនេះ៖\n\n{table}\n\n{question}"]
+  zh: ["这是一张表格：\n\n{table}\n\n{question}", "{question}\n\n{table}", "根据下表：\n\n{table}\n\n{question}"]
+
+rows_word:
+  en: "rows {rows}"
+  km: "ជួរ {rows}"
+  zh: "第{rows}行"
+
+sum_by:
+  q:
+    en: ["What is the total {measure} for {cat_value}?", "Add up {measure} where {cat_col} is {cat_value}."]
+    km: ["តើ {measure} សរុបសម្រាប់ {cat_value} គឺប៉ុន្មាន?", "សូមបូក {measure} ដែល {cat_col} គឺ {cat_value}។"]
+    zh: ["{cat_value}的{measure}合计是多少？", "请对{cat_col}为{cat_value}的{measure}求和。"]
+  a:
+    en: "{cat_col} = {cat_value} in {rows_text}.\nTotal = {expression} = **{result}**."
+    km: "{cat_col} = {cat_value} នៅ{rows_text}។\nសរុប = {expression} = **{result}**។"
+    zh: "{cat_col}为{cat_value}的是{rows_text}。\n合计 = {expression} = **{result}**。"
+
+avg_by:
+  q:
+    en: ["What is the average {measure} for {cat_value}?"]
+    km: ["តើ {measure} មធ្យមសម្រាប់ {cat_value} គឺប៉ុន្មាន?"]
+    zh: ["{cat_value}的平均{measure}是多少？"]
+  a:
+    en: "{cat_col} = {cat_value} in {rows_text} ({count} rows).\nAverage = ({expression}) / {count} = **{result}**."
+    km: "{cat_col} = {cat_value} នៅ{rows_text} ({count} ជួរ)។\nមធ្យម = ({expression}) / {count} = **{result}**។"
+    zh: "{cat_col}为{cat_value}的是{rows_text}（共{count}行）。\n平均值 = ({expression}) / {count} = **{result}**。"
+
+count_by:
+  q:
+    en: ["How many rows have {cat_col} equal to {cat_value}?", "Count the entries where {cat_col} is {cat_value}."]
+    km: ["តើមានប៉ុន្មានជួរដែល {cat_col} ស្មើនឹង {cat_value}?", "សូមរាប់ចំនួនដែល {cat_col} គឺ {cat_value}។"]
+    zh: ["{cat_col}等于{cat_value}的有几行？", "请统计{cat_col}为{cat_value}的条目数。"]
+  a:
+    en: "{cat_col} = {cat_value} in {rows_text}, so the count is **{result}**."
+    km: "{cat_col} = {cat_value} នៅ{rows_text} ដូច្នេះចំនួនគឺ **{result}**។"
+    zh: "{cat_col}为{cat_value}的是{rows_text}，因此共有 **{result}** 行。"
+
+max_row:
+  q:
+    en: ["Which row has the highest {measure}?"]
+    km: ["តើជួរណាមាន {measure} ខ្ពស់ជាងគេ?"]
+    zh: ["哪一行的{measure}最高？"]
+  a:
+    en: "The highest {measure} is **{result}**, in row {row} ({name_col}: {name})."
+    km: "{measure} ខ្ពស់ជាងគេគឺ **{result}** នៅជួរ {row} ({name_col}៖ {name})។"
+    zh: "最高的{measure}是 **{result}**，位于第{row}行（{name_col}：{name}）。"
+
+lookup:
+  q:
+    en: ["What is the {measure} of {name}?"]
+    km: ["តើ {measure} របស់ {name} គឺប៉ុន្មាន?"]
+    zh: ["{name}的{measure}是多少？"]
+  a:
+    en: "{name} is in row {row}; its {measure} is **{result}**."
+    km: "{name} នៅជួរ {row} ហើយ {measure} គឺ **{result}**។"
+    zh: "{name}在第{row}行，其{measure}为 **{result}**。"
+
+group_table:
+  q:
+    en: ["Show the total {measure} by {cat_col} as a table, largest first."]
+    km: ["សូមបង្ហាញ {measure} សរុបតាម {cat_col} ជាតារាង ពីធំទៅតូច។"]
+    zh: ["请按{cat_col}汇总{measure}并以表格显示，从大到小排列。"]
+  a:
+    en: "{table}"
+    km: "{table}"
+    zh: "{table}"
+
+top_k:
+  q:
+    en: ["List the top {k} rows by {measure}."]
+    km: ["សូមរាយ {k} ជួរកំពូលតាម {measure} ។"]
+    zh: ["按{measure}列出前{k}行。"]
+  a:
+    en: "{items}"
+    km: "{items}"
+    zh: "{items}"
+
+formula_sum:
+  q:
+    en: ["Write an Excel formula that returns the total {measure} for {cat_value}.", "Which formula sums {measure} where {cat_col} is {cat_value}?"]
+    km: ["សូមសរសេររូបមន្ត Excel ដែលគណនា {measure} សរុបសម្រាប់ {cat_value}។", "តើរូបមន្តអ្វីដែលបូក {measure} នៅពេល {cat_col} គឺ {cat_value}?"]
+    zh: ["写一个Excel公式，计算{cat_value}的{measure}合计。", "哪个公式可以对{cat_col}为{cat_value}的{measure}求和？"]
+  explain:
+    en: "SUMIFS adds the values in {sum_range} where {crit_range} equals \"{cat_value}\"."
+    km: "SUMIFS បូកតម្លៃក្នុង {sum_range} នៅពេល {crit_range} ស្មើនឹង \"{cat_value}\"។"
+    zh: "SUMIFS 对 {crit_range} 等于“{cat_value}”的行，把 {sum_range} 中的值相加。"
+
+formula_count:
+  q:
+    en: ["Write an Excel formula that counts the rows where {cat_col} is {cat_value}."]
+    km: ["សូមសរសេររូបមន្ត Excel ដែលរាប់ជួរ ដែល {cat_col} គឺ {cat_value}។"]
+    zh: ["写一个Excel公式，统计{cat_col}为{cat_value}的行数。"]
+  explain:
+    en: "COUNTIFS counts the cells in {crit_range} equal to \"{cat_value}\"."
+    km: "COUNTIFS រាប់ក្រឡាក្នុង {crit_range} ដែលស្មើនឹង \"{cat_value}\"។"
+    zh: "COUNTIFS 统计 {crit_range} 中等于“{cat_value}”的单元格个数。"
+
+formula_lookup:
+  q:
+    en: ["Write a formula that looks up the {measure} of {name}."]
+    km: ["សូមសរសេររូបមន្តដើម្បីរកមើល {measure} របស់ {name}។"]
+    zh: ["写一个公式查找{name}的{measure}。"]
+  explain:
+    en: "XLOOKUP finds \"{name}\" in {look_range} and returns the value from {return_range} on the same row."
+    km: "XLOOKUP ស្វែងរក \"{name}\" ក្នុង {look_range} ហើយផ្តល់តម្លៃពី {return_range} នៅជួរដដែល។"
+    zh: "XLOOKUP 在 {look_range} 中查找“{name}”，并返回 {return_range} 中同一行的值。"
+
+formula_pmt:
+  q:
+    en: ["Write an Excel formula for the monthly payment of loan {loan_id} (annual rate in %, term in months)."]
+    km: ["សូមសរសេររូបមន្ត Excel សម្រាប់ការបង់ប្រចាំខែនៃកម្ចី {loan_id} (អត្រាប្រចាំឆ្នាំជា %, រយៈពេលជាខែ)។"]
+    zh: ["写一个Excel公式，计算贷款{loan_id}的月供（年利率为%，期限以月计）。"]
+  explain:
+    en: "PMT takes the monthly rate ({rate_cell}/100/12), the number of months ({term_cell}) and the loan amount as a negative present value (-{amount_cell})."
+    km: "PMT ប្រើអត្រាប្រចាំខែ ({rate_cell}/100/12) ចំនួនខែ ({term_cell}) និងចំនួនកម្ចីជាតម្លៃបច្ចុប្បន្នអវិជ្ជមាន (-{amount_cell})។"
+    zh: "PMT 使用月利率（{rate_cell}/100/12）、月数（{term_cell}）以及以负数表示的贷款现值（-{amount_cell}）。"
+
+formula_answer:
+  en: "```excel\n{formula}\n```\n\n{explain} For this sheet it returns **{result}**."
+  km: "```excel\n{formula}\n```\n\n{explain} សម្រាប់តារាងនេះ វាផ្តល់លទ្ធផល **{result}**។"
+  zh: "```excel\n{formula}\n```\n\n{explain}对于这张表，结果为 **{result}**。"
+
+pct_change:
+  q:
+    en: ["By what percentage did {measure} in {branch} change from {m1} to {m2}?"]
+    km: ["តើ {measure} នៅ {branch} ប្រែប្រួលប៉ុន្មានភាគរយពី {m1} ដល់ {m2}?"]
+    zh: ["{branch}的{measure}从{m1}到{m2}变化了百分之几？"]
+  a:
+    en: "{m1}: {v1}; {m2}: {v2}.\nChange = ({v2} − {v1}) / {v1} × 100 = **{result}%**."
+    km: "{m1}៖ {v1}; {m2}៖ {v2}។\nការប្រែប្រួល = ({v2} − {v1}) / {v1} × 100 = **{result}%**។"
+    zh: "{m1}：{v1}；{m2}：{v2}。\n变化 = ({v2} − {v1}) / {v1} × 100 = **{result}%**。"
