@@ -1,0 +1,140 @@
+# Grounded question answering (RAG) seeds. Articles KB-001..KB-004 come from
+# dsm.tools.bank_sim.KB_ARTICLES (shared with the knowledge-base tool); this file
+# adds titles for them plus more articles, question/answer pairs and
+# "near-miss" questions whose answer is NOT in any article (the model must
+# abstain instead of guessing). All policies are simulated.
+# Khmer text: needs native-speaker review before production use.
+
+instructions:
+  en: "Answer the question using only the documents below. Cite the documents you use, e.g. [1]. If the answer is not in the documents, say so."
+  km: "សូមឆ្លើយសំណួរដោយប្រើតែឯកសារខាងក្រោមប៉ុណ្ណោះ។ សូមយោងឯកសារដែលអ្នកប្រើ ឧទាហរណ៍ [1]។ ប្រសិនបើចម្លើយមិនមាននៅក្នុងឯកសារទេ សូមប្រាប់ឱ្យដឹង។"
+  zh: "请仅根据以下文档回答问题，并注明所引用的文档，例如[1]。如果文档中没有答案，请直接说明。"
+labels:
+  documents: {en: "Documents:", km: "ឯកសារ៖", zh: "文档："}
+  question: {en: "Question:", km: "សំណួរ៖", zh: "问题："}
+abstain:
+  en:
+    - "The provided documents don't contain this information, so I can't answer it from them."
+    - "I couldn't find the answer in the documents provided. You may need to check with the bank directly."
+  km:
+    - "ឯកសារដែលបានផ្តល់មិនមានព័ត៌មាននេះទេ ដូច្នេះខ្ញុំមិនអាចឆ្លើយដោយផ្អែកលើឯកសារទាំងនេះបានទេ។"
+    - "ខ្ញុំរកមិនឃើញចម្លើយនៅក្នុងឯកសារដែលបានផ្តល់ទេ។ អ្នកប្រហែលជាត្រូវសាកសួរធនាគារដោយផ្ទាល់។"
+  zh:
+    - "所提供的文档中没有这方面的信息，因此我无法根据这些文档回答。"
+    - "我在所提供的文档中没有找到答案，您可能需要直接向银行咨询。"
+
+titles:
+  KB-001: {en: "Opening a savings account", km: "ការបើកគណនីសន្សំ", zh: "开设储蓄账户"}
+  KB-002: {en: "Protecting your OTP and PIN", km: "ការការពារលេខកូដ OTP និង PIN", zh: "保护您的OTP和PIN"}
+  KB-003: {en: "Lost or stolen cards", km: "កាតបាត់ ឬត្រូវគេលួច", zh: "银行卡丢失或被盗"}
+  KB-004: {en: "Personal loan requirements", km: "លក្ខខណ្ឌសុំកម្ចីផ្ទាល់ខ្លួន", zh: "个人贷款申请条件"}
+
+articles:
+  - id: KB-005
+    title: {en: "Fixed deposit accounts", km: "គណនីប្រាក់បញ្ញើមានកាលកំណត់", zh: "定期存款账户"}
+    text:
+      en: "Fixed deposits are available for 3, 6, 12 and 24 months with a minimum deposit of 100 USD. If you withdraw before the maturity date, most of the interest is lost (simulated policy)."
+      km: "ប្រាក់បញ្ញើមានកាលកំណត់មានរយៈពេល 3, 6, 12 និង 24 ខែ ដោយប្រាក់បញ្ញើអប្បបរមា 100 ដុល្លារ។ ប្រសិនបើអ្នកដកប្រាក់មុនកាលបរិច្ឆេទផុតកំណត់ អ្នកនឹងបាត់បង់ការប្រាក់ភាគច្រើន (គោលការណ៍សាកល្បង)។"
+      zh: "定期存款期限有3个月、6个月、12个月和24个月，最低存款额为100美元。如果在到期日之前提前支取，将损失大部分利息（模拟政策）。"
+  - id: KB-006
+    title: {en: "Mobile app transfer limits", km: "ដែនកំណត់ផ្ទេរប្រាក់ក្នុងកម្មវិធីទូរស័ព្ទ", zh: "手机银行转账限额"}
+    text:
+      en: "Verified customers can transfer up to 5,000 USD per day in the mobile app (simulated policy). To raise the limit, visit a branch with your ID card."
+      km: "អតិថិជនដែលបានផ្ទៀងផ្ទាត់អាចផ្ទេរប្រាក់បានរហូតដល់ 5,000 ដុល្លារក្នុងមួយថ្ងៃតាមកម្មវិធីទូរស័ព្ទ (គោលការណ៍សាកល្បង)។ ដើម្បីបង្កើនដែនកំណត់ សូមអញ្ជើញមកសាខាជាមួយអត្តសញ្ញាណប័ណ្ណរបស់អ្នក។"
+      zh: "已验证的客户每天可通过手机应用转账最多5,000美元（模拟政策）。如需提高限额，请携带身份证到分行办理。"
+  - id: KB-007
+    title: {en: "Paying with KHQR", km: "ការទូទាត់ដោយ KHQR", zh: "使用KHQR付款"}
+    text:
+      en: "You can pay merchants by scanning their KHQR code in the app. QR payments in KHR or USD are free of charge (simulated policy)."
+      km: "អ្នកអាចទូទាត់ប្រាក់ទៅអ្នកលក់ដោយស្កេនកូដ KHQR របស់ពួកគេក្នុងកម្មវិធី។ ការទូទាត់តាម QR ជាប្រាក់រៀល ឬដុល្លារ មិនគិតថ្លៃសេវាទេ (គោលការណ៍សាកល្បង)។"
+      zh: "您可以在应用中扫描商家的KHQR码进行付款。以瑞尔或美元进行的二维码支付免收手续费（模拟政策）。"
+  - id: KB-008
+    title: {en: "Branch opening hours", km: "ម៉ោងបើកសាខា", zh: "分行营业时间"}
+    text:
+      en: "Branches are open Monday to Friday from 8:00 to 16:00 and on Saturday from 8:00 to 11:30. They are closed on Sundays and public holidays (simulated policy)."
+      km: "សាខាបើកពីថ្ងៃច័ន្ទដល់ថ្ងៃសុក្រ ចាប់ពីម៉ោង 8:00 ដល់ 16:00 និងថ្ងៃសៅរ៍ ចាប់ពីម៉ោង 8:00 ដល់ 11:30។ សាខាបិទនៅថ្ងៃអាទិត្យ និងថ្ងៃបុណ្យជាតិ (គោលការណ៍សាកល្បង)។"
+      zh: "分行营业时间为周一至周五8:00至16:00，周六8:00至11:30。周日及公众假期休息（模拟政策）。"
+  - id: KB-009
+    title: {en: "International transfers", km: "ការផ្ទេរប្រាក់អន្តរជាតិ", zh: "国际汇款"}
+    text:
+      en: "International transfers via SWIFT take 1 to 3 working days. The fee is 15 USD plus any charges of the correspondent bank (simulated policy)."
+      km: "ការផ្ទេរប្រាក់អន្តរជាតិតាម SWIFT ចំណាយពេលពី 1 ទៅ 3 ថ្ងៃធ្វើការ។ ថ្លៃសេវាគឺ 15 ដុល្លារ បូកនឹងថ្លៃសេវារបស់ធនាគារឆ្លើយឆ្លង (គោលការណ៍សាកល្បង)។"
+      zh: "通过SWIFT进行的国际汇款需要1至3个工作日。手续费为15美元，另加代理行收取的费用（模拟政策）。"
+  - id: KB-010
+    title: {en: "Dormant accounts", km: "គណនីអសកម្ម", zh: "休眠账户"}
+    text:
+      en: "An account becomes dormant after 12 months without any customer-initiated transaction. To reactivate it, visit a branch with your ID card (simulated policy)."
+      km: "គណនីមួយនឹងក្លាយជាគណនីអសកម្ម បន្ទាប់ពី 12 ខែដោយគ្មានប្រតិបត្តិការណាមួយដែលធ្វើឡើងដោយអតិថិជន។ ដើម្បីដំណើរការគណនីឡើងវិញ សូមអញ្ជើញមកសាខាជាមួយអត្តសញ្ញាណប័ណ្ណរបស់អ្នក (គោលការណ៍សាកល្បង)។"
+      zh: "账户连续12个月没有客户主动发起的交易即成为休眠账户。如需重新激活，请携带身份证到分行办理（模拟政策）。"
+
+qa:
+  - article: KB-001
+    q: {en: "What documents do I need to open a savings account?", km: "តើខ្ញុំត្រូវការឯកសារអ្វីខ្លះដើម្បីបើកគណនីសន្សំ?", zh: "开设储蓄账户需要什么证件？"}
+    a: {en: "You need your national ID card or passport, plus an initial deposit of at least 10 USD.", km: "អ្នកត្រូវការអត្តសញ្ញាណប័ណ្ណ ឬលិខិតឆ្លងដែន និងប្រាក់បញ្ញើដំបូងយ៉ាងតិច 10 ដុល្លារ។", zh: "需要身份证或护照，并首次存入至少10美元。"}
+  - article: KB-001
+    q: {en: "How long does it take to open an account?", km: "តើការបើកគណនីចំណាយពេលប៉ុន្មាន?", zh: "开户需要多长时间？"}
+    a: {en: "Opening an account takes about 15 minutes at any branch.", km: "ការបើកគណនីចំណាយពេលប្រហែល 15 នាទីនៅសាខាណាមួយ។", zh: "在任何分行办理大约需要15分钟。"}
+  - article: KB-002
+    q: {en: "Will the bank ever ask for my OTP by phone?", km: "តើធនាគារនឹងសុំលេខកូដ OTP របស់ខ្ញុំតាមទូរស័ព្ទដែរឬទេ?", zh: "银行会通过电话向我索要OTP验证码吗？"}
+    a: {en: "No. The bank will never ask for your OTP, PIN or password by phone, SMS, chat or social media.", km: "ទេ។ ធនាគារនឹងមិនសុំលេខកូដ OTP លេខ PIN ឬពាក្យសម្ងាត់របស់អ្នកតាមទូរស័ព្ទ សារ SMS ការជជែក ឬបណ្តាញសង្គមឡើយ។", zh: "不会。银行绝不会通过电话、短信、聊天或社交媒体索要您的OTP验证码、PIN或密码。"}
+  - article: KB-003
+    q: {en: "What should I do if my card is stolen?", km: "តើខ្ញុំគួរធ្វើអ្វី ប្រសិនបើកាតរបស់ខ្ញុំត្រូវគេលួច?", zh: "如果我的卡被盗了该怎么办？"}
+    a: {en: "Block the card immediately in the app or by calling the hotline.", km: "សូមបិទកាតភ្លាមៗក្នុងកម្មវិធី ឬដោយទូរស័ព្ទទៅខ្សែទូរស័ព្ទបន្ទាន់។", zh: "请立即在应用中或拨打热线冻结该卡。"}
+  - article: KB-003
+    q: {en: "When can I collect a replacement card?", km: "តើខ្ញុំអាចទទួលកាតជំនួសនៅពេលណា?", zh: "什么时候可以领取补办的新卡？"}
+    a: {en: "A replacement card can be collected at any branch after 3 working days.", km: "អ្នកអាចទទួលកាតជំនួសនៅសាខាណាមួយបន្ទាប់ពី 3 ថ្ងៃធ្វើការ។", zh: "3个工作日后可到任一分行领取补办的新卡。"}
+  - article: KB-004
+    q: {en: "What do I need to apply for a personal loan?", km: "តើខ្ញុំត្រូវការអ្វីខ្លះដើម្បីដាក់ពាក្យសុំកម្ចីផ្ទាល់ខ្លួន?", zh: "申请个人贷款需要什么材料？"}
+    a: {en: "You need an ID card, proof of income for the last 3 months and proof of address.", km: "អ្នកត្រូវការអត្តសញ្ញាណប័ណ្ណ ភស្តុតាងប្រាក់ចំណូលរយៈពេល 3 ខែចុងក្រោយ និងភស្តុតាងអាសយដ្ឋាន។", zh: "需要身份证、近3个月的收入证明和住址证明。"}
+  - article: KB-004
+    q: {en: "How long does loan approval take?", km: "តើការអនុម័តកម្ចីចំណាយពេលប៉ុន្មាន?", zh: "贷款审批需要多长时间？"}
+    a: {en: "Approval usually takes 2-5 working days.", km: "ការអនុម័តជាធម្មតាចំណាយពេល 2-5 ថ្ងៃធ្វើការ។", zh: "审批通常需要2至5个工作日。"}
+  - article: KB-005
+    q: {en: "What is the minimum amount for a fixed deposit?", km: "តើប្រាក់បញ្ញើមានកាលកំណត់អប្បបរមាប៉ុន្មាន?", zh: "定期存款的最低金额是多少？"}
+    a: {en: "The minimum fixed deposit is 100 USD.", km: "ប្រាក់បញ្ញើមានកាលកំណត់អប្បបរមាគឺ 100 ដុល្លារ។", zh: "定期存款的最低金额为100美元。"}
+  - article: KB-005
+    q: {en: "What happens if I withdraw my fixed deposit early?", km: "តើមានអ្វីកើតឡើង ប្រសិនបើខ្ញុំដកប្រាក់បញ្ញើមានកាលកំណត់មុនពេល?", zh: "如果我提前支取定期存款会怎样？"}
+    a: {en: "If you withdraw before the maturity date, you lose most of the interest.", km: "ប្រសិនបើអ្នកដកប្រាក់មុនកាលបរិច្ឆេទផុតកំណត់ អ្នកនឹងបាត់បង់ការប្រាក់ភាគច្រើន។", zh: "如果在到期日之前支取，您将损失大部分利息。"}
+  - article: KB-006
+    q: {en: "How much can I transfer per day in the app?", km: "តើខ្ញុំអាចផ្ទេរប្រាក់បានប៉ុន្មានក្នុងមួយថ្ងៃតាមកម្មវិធី?", zh: "我每天在应用里最多能转账多少？"}
+    a: {en: "Verified customers can transfer up to 5,000 USD per day in the mobile app.", km: "អតិថិជនដែលបានផ្ទៀងផ្ទាត់អាចផ្ទេរប្រាក់បានរហូតដល់ 5,000 ដុល្លារក្នុងមួយថ្ងៃ។", zh: "已验证的客户每天最多可转账5,000美元。"}
+  - article: KB-006
+    q: {en: "How can I increase my transfer limit?", km: "តើខ្ញុំអាចបង្កើនដែនកំណត់ផ្ទេរប្រាក់ដោយរបៀបណា?", zh: "怎样提高转账限额？"}
+    a: {en: "Visit a branch with your ID card to raise the limit.", km: "សូមអញ្ជើញមកសាខាជាមួយអត្តសញ្ញាណប័ណ្ណរបស់អ្នក ដើម្បីបង្កើនដែនកំណត់។", zh: "请携带身份证到分行办理提高限额。"}
+  - article: KB-007
+    q: {en: "Is there a fee for paying by QR code?", km: "តើការទូទាត់តាមកូដ QR គិតថ្លៃសេវាទេ?", zh: "用二维码付款要收费吗？"}
+    a: {en: "No, QR payments in KHR or USD are free of charge.", km: "ទេ ការទូទាត់តាម QR ជាប្រាក់រៀល ឬដុល្លារ មិនគិតថ្លៃសេវាទេ។", zh: "不收费，以瑞尔或美元进行的二维码支付免收手续费。"}
+  - article: KB-007
+    q: {en: "How do I pay a shop with the app?", km: "តើខ្ញុំទូទាត់ប្រាក់ទៅហាងតាមកម្មវិធីដោយរបៀបណា?", zh: "怎样用应用给商店付款？"}
+    a: {en: "Scan the merchant's KHQR code in the app to pay.", km: "សូមស្កេនកូដ KHQR របស់អ្នកលក់ក្នុងកម្មវិធី ដើម្បីទូទាត់ប្រាក់។", zh: "在应用中扫描商家的KHQR码即可付款。"}
+  - article: KB-008
+    q: {en: "Are branches open on Saturday?", km: "តើសាខាបើកនៅថ្ងៃសៅរ៍ទេ?", zh: "分行周六营业吗？"}
+    a: {en: "Yes, branches are open on Saturday from 8:00 to 11:30.", km: "សាខាបើកនៅថ្ងៃសៅរ៍ ចាប់ពីម៉ោង 8:00 ដល់ 11:30។", zh: "营业，周六营业时间为8:00至11:30。"}
+  - article: KB-008
+    q: {en: "Can I visit a branch on Sunday?", km: "តើខ្ញុំអាចទៅសាខានៅថ្ងៃអាទិត្យបានទេ?", zh: "我可以周日去分行吗？"}
+    a: {en: "No, branches are closed on Sundays and public holidays.", km: "មិនបានទេ សាខាបិទនៅថ្ងៃអាទិត្យ និងថ្ងៃបុណ្យជាតិ។", zh: "不可以，分行周日及公众假期休息。"}
+  - article: KB-009
+    q: {en: "How long does an international transfer take?", km: "តើការផ្ទេរប្រាក់អន្តរជាតិចំណាយពេលប៉ុន្មានថ្ងៃ?", zh: "国际汇款需要多长时间？"}
+    a: {en: "An international SWIFT transfer takes 1 to 3 working days.", km: "ការផ្ទេរប្រាក់អន្តរជាតិតាម SWIFT ចំណាយពេលពី 1 ទៅ 3 ថ្ងៃធ្វើការ។", zh: "通过SWIFT的国际汇款需要1至3个工作日。"}
+  - article: KB-009
+    q: {en: "What is the fee for sending money abroad?", km: "តើការផ្ញើប្រាក់ទៅក្រៅប្រទេសគិតថ្លៃសេវាប៉ុន្មាន?", zh: "汇款到国外的手续费是多少？"}
+    a: {en: "The fee is 15 USD plus any charges of the correspondent bank.", km: "ថ្លៃសេវាគឺ 15 ដុល្លារ បូកនឹងថ្លៃសេវារបស់ធនាគារឆ្លើយឆ្លង។", zh: "手续费为15美元，另加代理行收取的费用。"}
+  - article: KB-010
+    q: {en: "When does an account become dormant?", km: "តើគណនីក្លាយជាគណនីអសកម្មនៅពេលណា?", zh: "账户什么时候会变成休眠账户？"}
+    a: {en: "An account becomes dormant after 12 months without any customer-initiated transaction.", km: "គណនីក្លាយជាគណនីអសកម្ម បន្ទាប់ពី 12 ខែដោយគ្មានប្រតិបត្តិការណាមួយដែលធ្វើឡើងដោយអតិថិជន។", zh: "连续12个月没有客户主动发起的交易后，账户会成为休眠账户。"}
+  - article: KB-010
+    q: {en: "How do I reactivate a dormant account?", km: "តើខ្ញុំអាចដំណើរការគណនីអសកម្មឡើងវិញដោយរបៀបណា?", zh: "怎样重新激活休眠账户？"}
+    a: {en: "Visit a branch with your ID card to reactivate it.", km: "សូមអញ្ជើញមកសាខាជាមួយអត្តសញ្ញាណប័ណ្ណរបស់អ្នក ដើម្បីដំណើរការគណនីឡើងវិញ។", zh: "请携带身份证到分行办理重新激活。"}
+
+# Related article present, answer absent -> the model must abstain, not guess.
+near_miss:
+  - related: KB-003
+    q: {en: "How much does a replacement card cost?", km: "តើកាតជំនួសមានតម្លៃប៉ុន្មាន?", zh: "补办新卡要多少钱？"}
+  - related: KB-003
+    q: {en: "What is the phone number of the hotline?", km: "តើលេខខ្សែទូរស័ព្ទបន្ទាន់គឺប៉ុន្មាន?", zh: "热线电话号码是多少？"}
+  - related: KB-005
+    q: {en: "What is the interest rate for a 12-month fixed deposit?", km: "តើអត្រាការប្រាក់សម្រាប់ប្រាក់បញ្ញើមានកាលកំណត់ 12 ខែគឺប៉ុន្មាន?", zh: "12个月定期存款的利率是多少？"}
+  - related: KB-004
+    q: {en: "What is the maximum amount I can borrow?", km: "តើខ្ញុំអាចខ្ចីបានច្រើនបំផុតប៉ុន្មាន?", zh: "我最多可以贷款多少？"}
+  - related: KB-009
+    q: {en: "What exchange rate is used for international transfers?", km: "តើអត្រាប្តូរប្រាក់អ្វីដែលត្រូវបានប្រើសម្រាប់ការផ្ទេរប្រាក់អន្តរជាតិ?", zh: "国际汇款使用什么汇率？"}

@@ -1,0 +1,15 @@
+# CPT mixture targets for `dsm data mix --config configs/data/mix_cpt.yaml`.
+# Shares are fractions of the token budget; max_epochs caps repetition of small sources
+# (the excess share is redistributed to the others). Output: weights for cpt_24gb.yaml.
+total_tokens: 2.0e9
+max_epochs: 4
+sources:
+  km_web:        {path: datasets/packed/km_web, share: 0.38}
+  km_wiki_news:  {path: datasets/packed/km_wiki_news, share: 0.07}
+  en_web_edu:    {path: datasets/packed/en_web_edu, share: 0.20, max_epochs: 1}
+  zh_web:        {path: datasets/packed/zh_web, share: 0.20, max_epochs: 1}
+  parallel:      {path: datasets/packed/parallel, share: 0.07}
+  math:          {path: datasets/packed/math, share: 0.04, max_epochs: 2}
+  code:          {path: datasets/packed/code, share: 0.03, max_epochs: 2}
+  tables:        {path: datasets/packed/tables, share: 0.0099}
+  identity_docs: {path: datasets/packed/identity_docs, share: 0.0001, max_epochs: 100000}

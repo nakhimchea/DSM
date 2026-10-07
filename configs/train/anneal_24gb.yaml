@@ -1,0 +1,32 @@
+# Annealing (decay phase of WSD): 0.3-0.5B tokens of the best data, LR decaying to ~0.
+# High-quality documents + 10-15 % instruction-formatted text + identity docs + 20 % replay.
+stage: anneal
+model: work/runs/cpt/final
+output_dir: work/runs/anneal
+data:
+  train:
+    - {path: datasets/packed/km_hq, weight: 0.30}           # best-scored Khmer documents
+    - {path: datasets/packed/en_hq, weight: 0.12}
+    - {path: datasets/packed/zh_hq, weight: 0.12}
+    - {path: datasets/packed/parallel_hq, weight: 0.08}
+    - {path: datasets/packed/instructions_text, weight: 0.13}  # SFT-style text rendered as plain documents
+    - {path: datasets/packed/math, weight: 0.03}
+    - {path: datasets/packed/code, weight: 0.02}
+    - {path: datasets/packed/identity_docs, weight: 0.0005}
+    - {path: datasets/packed/replay_mix, weight: 0.1995}    # same mixture as CPT (forgetting guard)
+  eval:
+    - {path: datasets/packed/eval_km, name: km}
+    - {path: datasets/packed/eval_en, name: en}
+    - {path: datasets/packed/eval_zh, name: zh}
+max_tokens: 4.0e8
+seq_len: 4096
+micro_batch_size: 4
+grad_accum: 32
+optimizer: {lr: 1.0e-4, weight_decay: 0.1, betas: [0.9, 0.95], grad_clip: 1.0}
+schedule: {name: linear, warmup: 50, min_lr_ratio: 0.0}
+precision: bf16
+gradient_checkpointing: true
+log_every: 10
+eval_every: 100
+eval_tokens: 2000000
+save_every: 200

@@ -1,0 +1,35 @@
+# Continued pre-training (stable phase of WSD): ~2B tokens, Khmer-heavy with en/zh
+# replay against forgetting. Constant LR after warm-up; the decay happens in the
+# separate anneal stage (anneal_24gb.yaml) on higher-quality data.
+# ~4K steps; at 5-8K tokens/s that is 3-5 days on a 24 GB GPU (measure: --bench 20).
+stage: cpt
+model: work/models/dsm-base
+output_dir: work/runs/cpt
+data:
+  train:
+    - {path: datasets/packed/km_web, weight: 0.38}          # HPLT v3 + FineWeb-2 khm_Khmr (cleaned, deduped)
+    - {path: datasets/packed/km_wiki_news, weight: 0.07}    # Wikipedia-km, news, books
+    - {path: datasets/packed/en_web_edu, weight: 0.20}      # FineWeb-Edu / DCLM
+    - {path: datasets/packed/zh_web, weight: 0.20}          # FineWeb-2 cmn_Hani, CCI3-HQ, zh Wikipedia
+    - {path: datasets/packed/parallel, weight: 0.07}        # km-en / km-zh pairs as documents
+    - {path: datasets/packed/math, weight: 0.04}
+    - {path: datasets/packed/code, weight: 0.03}
+    - {path: datasets/packed/tables, weight: 0.0099}
+    - {path: datasets/packed/identity_docs, weight: 0.0001} # "About DSM" replay
+  eval:
+    - {path: datasets/packed/eval_km, name: km}
+    - {path: datasets/packed/eval_en, name: en}
+    - {path: datasets/packed/eval_zh, name: zh}
+max_tokens: 2.0e9
+seq_len: 4096
+micro_batch_size: 4
+grad_accum: 32                      # 4 x 4096 x 32 = 524K tokens per step
+optimizer: {lr: 1.0e-4, weight_decay: 0.1, betas: [0.9, 0.95], eps: 1.0e-8, grad_clip: 1.0}
+schedule: {name: constant, warmup: 0.01}
+precision: bf16
+gradient_checkpointing: true
+log_every: 10
+eval_every: 250
+eval_tokens: 2000000
+save_every: 250
+keep_checkpoints: 2

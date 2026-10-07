@@ -1,0 +1,31 @@
+# Tokenizer pilot, arm B phase 1 (docs/14_khmer_tokenizer.md): after `dsm tokenizer extend`
+# + `remap`, train ONLY the new Khmer embedding rows for ~50M tokens, so the new tokens catch
+# up before the rest of the network moves. The first new row is read from the model's
+# extension.json (248,070 for the DSM vocabulary). Phase 2 = cpt_24gb.yaml on this output with
+# max_tokens=1.0e8; arm A = cpt_24gb.yaml with the original tokenizer and max_tokens=1.5e8.
+# Every dataset must be packed with the extended tokenizer (datasets/packed_ext); the trainer
+# refuses packs made with another tokenizer. Compare per-language bits per byte in metrics.jsonl.
+stage: cpt
+model: work/models/dsm-base-km-ext
+output_dir: work/runs/pilot_B1
+trainable: new_rows
+data:                               # scripts/45_tokenizer_pilot.sh passes the list with --data
+  train:
+    - {path: datasets/packed_ext/km_web, weight: 0.7}
+    - {path: datasets/packed_ext/km_wiki_news, weight: 0.1}
+    - {path: datasets/packed_ext/parallel, weight: 0.2}
+  eval:
+    - {path: datasets/packed_ext/eval_km, name: km}
+    - {path: datasets/packed_ext/eval_en, name: en}
+    - {path: datasets/packed_ext/eval_zh, name: zh}
+max_tokens: 5.0e7
+seq_len: 4096
+micro_batch_size: 4
+grad_accum: 32
+optimizer: {lr: 1.0e-3, weight_decay: 0.0, betas: [0.9, 0.95], grad_clip: 1.0}
+schedule: {name: cosine, warmup: 0.05, min_lr_ratio: 0.1}
+precision: bf16
+gradient_checkpointing: true
+eval_every: 25
+eval_tokens: 2000000
+save_every: 50

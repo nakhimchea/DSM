@@ -1,0 +1,27 @@
+# Pre-training FROM SCRATCH, demonstrated on DSM-nano (~160M params, configs/model/dsm-nano.yaml).
+# Pre-training the 0.8B model from scratch would need ~1T tokens (years on one GPU);
+# this run shows the full mechanics on ~1B tokens in about a day.
+stage: pt
+model: null
+model_config: configs/model/dsm-nano.yaml
+tokenizer: work/models/dsm-base       # reuse the DSM tokenizer files
+output_dir: work/runs/pt_nano
+data:
+  train:
+    - {path: datasets/packed/km_web, weight: 0.4}
+    - {path: datasets/packed/en_web_edu, weight: 0.3}
+    - {path: datasets/packed/zh_web, weight: 0.3}
+  eval:
+    - {path: datasets/packed/eval_km, name: km}
+    - {path: datasets/packed/eval_en, name: en}
+    - {path: datasets/packed/eval_zh, name: zh}
+max_tokens: 1.0e9
+seq_len: 2048
+micro_batch_size: 16
+grad_accum: 16                      # 524K tokens per step
+optimizer: {lr: 1.0e-3, weight_decay: 0.1, betas: [0.9, 0.95], grad_clip: 1.0}
+schedule: {name: wsd, warmup: 0.02, decay: 0.2, decay_shape: sqrt, min_lr_ratio: 0.0}
+precision: bf16
+gradient_checkpointing: true
+eval_every: 200
+save_every: 200

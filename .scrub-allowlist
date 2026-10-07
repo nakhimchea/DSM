@@ -1,0 +1,8 @@
+# Repository files that are allowed to contain upstream (source-checkpoint)
+# identifiers. Checked by `dsm audit repo`. Everything else must be clean.
+#
+# Provenance / legal attribution
+NOTICE
+docs/12_licensing_provenance.md
+# The single source of upstream identifiers read by the code
+configs/upstream.yaml

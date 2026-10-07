@@ -1,0 +1,19 @@
+# SFT mixture (% of ~200K conversations):
+#   dsm data mix --config configs/data/mix_sft.yaml --out work/mix/sft.yaml
+#   dsm train --config configs/train/sft_24gb.yaml --data work/mix/sft.yaml
+# A source is one or more files (glob patterns); files that do not exist are reported and
+# left out. Layout: datasets/sft/<category>/<dataset>.jsonl.zst (docs/13_runbook_24gb.md).
+kind: sft
+total: 200000
+sources:
+  chat:           {paths: ["datasets/sft/chat/*.jsonl.zst"], share: 30}
+  tools:          {paths: ["datasets/sft/tools/*.jsonl.zst", "datasets/sft/seeds/tools.jsonl.zst"], share: 12}
+  tables:         {paths: ["datasets/sft/tables/*.jsonl.zst", "datasets/sft/seeds/tables.jsonl.zst"], share: 10}
+  math:           {paths: ["datasets/sft/math/*.jsonl.zst"], share: 10}
+  khmer:          {paths: ["datasets/sft/khmer/*.jsonl.zst"], share: 10}   # translated chats + translation tasks
+  rag:            {paths: ["datasets/sft/rag/*.jsonl.zst", "datasets/sft/seeds/rag.jsonl.zst"], share: 8}
+  safety:         {paths: ["datasets/sft/safety/*.jsonl.zst", "datasets/sft/seeds/safety/safety_sft.jsonl.zst"], share: 8}
+  code:           {paths: ["datasets/sft/code/*.jsonl.zst"], share: 4}
+  formatting:     {paths: ["datasets/sft/seeds/formatting.jsonl.zst"], share: 4}
+  identity:       {paths: ["datasets/sft/seeds/identity/identity_sft.jsonl.zst"], share: 2}
+  long_multiturn: {paths: ["datasets/sft/long/*.jsonl.zst"], share: 2}

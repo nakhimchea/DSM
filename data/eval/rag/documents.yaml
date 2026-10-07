@@ -1,0 +1,42 @@
+# Held-out grounded-QA set for `dsm eval suite --suites rag`: documents that are NOT in
+# the training seeds, questions with the facts the answer must contain, and questions
+# the documents cannot answer. Prompts use the same format as training
+# (dsm.data.builders.rag.RagBuilder.prompt).
+# NATIVE REVIEW REQUIRED for km / zh wording.
+
+documents:
+  - id: EV-1
+    title: {en: "Savings promotion", km: "ការផ្សព្វផ្សាយគណនីសន្សំ", zh: "储蓄促销活动"}
+    text:
+      en: "New savings accounts opened before 31 December receive a bonus of 5 USD after the first deposit of at least 50 USD (simulated policy)."
+      km: "គណនីសន្សំថ្មីដែលបើកមុនថ្ងៃទី 31 ខែធ្នូ នឹងទទួលបានប្រាក់រង្វាន់ 5 ដុល្លារ បន្ទាប់ពីការដាក់ប្រាក់លើកដំបូងយ៉ាងតិច 50 ដុល្លារ (គោលការណ៍សាកល្បង)។"
+      zh: "12月31日前新开立的储蓄账户，在首次存入至少50美元后可获得5美元奖励（模拟政策）。"
+  - id: EV-2
+    title: {en: "ATM withdrawals", km: "ការដកប្រាក់តាម ATM", zh: "ATM取款"}
+    text:
+      en: "Customers can withdraw up to 2,000 USD per day from the bank's ATMs. Withdrawals at other banks' ATMs cost 1.5 USD each (simulated policy)."
+      km: "អតិថិជនអាចដកប្រាក់បានរហូតដល់ 2,000 ដុល្លារក្នុងមួយថ្ងៃពីម៉ាស៊ីន ATM របស់ធនាគារ។ ការដកប្រាក់នៅម៉ាស៊ីន ATM របស់ធនាគារផ្សេងទៀតគិតថ្លៃ 1.5 ដុល្លារក្នុងមួយដង (គោលការណ៍សាកល្បង)។"
+      zh: "客户每天最多可从本行ATM取款2,000美元。在他行ATM取款每次收费1.5美元（模拟政策）。"
+  - id: EV-3
+    title: {en: "Statement requests", km: "ការស្នើសុំរបាយការណ៍គណនី", zh: "账户对账单申请"}
+    text:
+      en: "Account statements for the last 12 months can be downloaded free of charge in the app. Printed statements from a branch cost 2 USD per page (simulated policy)."
+      km: "របាយការណ៍គណនីសម្រាប់ 12 ខែចុងក្រោយអាចទាញយកដោយឥតគិតថ្លៃក្នុងកម្មវិធី។ របាយការណ៍ដែលបោះពុម្ពនៅសាខាគិតថ្លៃ 2 ដុល្លារក្នុងមួយទំព័រ (គោលការណ៍សាកល្បង)។"
+      zh: "最近12个月的账户对账单可在应用中免费下载。在分行打印的对账单每页收费2美元（模拟政策）。"
+
+questions:
+  - doc: EV-1
+    q: {en: "How big is the bonus for a new savings account?", km: "តើប្រាក់រង្វាន់សម្រាប់គណនីសន្សំថ្មីមានចំនួនប៉ុន្មាន?", zh: "新储蓄账户的奖励是多少？"}
+    expect: ["5"]
+  - doc: EV-2
+    q: {en: "What is the daily ATM withdrawal limit?", km: "តើដែនកំណត់ដកប្រាក់តាម ATM ក្នុងមួយថ្ងៃគឺប៉ុន្មាន?", zh: "ATM每日取款限额是多少？"}
+    expect: ["2000"]
+  - doc: EV-3
+    q: {en: "How much does a printed statement cost?", km: "តើរបាយការណ៍ដែលបោះពុម្ពមានតម្លៃប៉ុន្មាន?", zh: "打印对账单要多少钱？"}
+    expect: ["2"]
+
+unanswerable:
+  - related: EV-2
+    q: {en: "How much does it cost to withdraw cash abroad?", km: "តើការដកប្រាក់សុទ្ធនៅបរទេសគិតថ្លៃប៉ុន្មាន?", zh: "在国外取现要收多少费用？"}
+  - related: EV-1
+    q: {en: "What interest rate does the new savings account pay?", km: "តើគណនីសន្សំថ្មីផ្តល់អត្រាការប្រាក់ប៉ុន្មាន?", zh: "新储蓄账户的利率是多少？"}

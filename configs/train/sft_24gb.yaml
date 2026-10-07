@@ -1,0 +1,40 @@
+# Full SFT: ~200K conversations, 2 epochs, assistant-only loss, packed to 4096 tokens.
+# Start from the annealed model, or from its chat-vector merge
+# (dsm merge chat-vector --base work/models/dsm-base --instruct work/models/dsm-instruct
+#  --target work/runs/anneal/final --out work/models/anneal-cv) and A/B both.
+# Recommended data list: `dsm data mix --config configs/data/mix_sft.yaml --out work/mix/sft.yaml`
+# then `dsm train --config configs/train/sft_24gb.yaml --data work/mix/sft.yaml` (exact shares:
+# chat 30, tools 12, tables 10, math 10, Khmer/translation 10, RAG 8, safety 8, code 4,
+# formatting 4, identity 2, long multi-turn 2 %). Without --data the list below is used;
+# every glob must match at least one file.
+stage: sft
+model: work/runs/anneal/final
+output_dir: work/runs/sft
+data:
+  train:
+    - {path: "datasets/sft/chat/*.jsonl.zst"}
+    - {path: "datasets/sft/tools/*.jsonl.zst"}
+    - {path: datasets/sft/seeds/tools.jsonl.zst, repeat: 2}
+    - {path: "datasets/sft/tables/*.jsonl.zst"}
+    - {path: datasets/sft/seeds/tables.jsonl.zst, repeat: 2}
+    - {path: "datasets/sft/math/*.jsonl.zst"}
+    - {path: "datasets/sft/khmer/*.jsonl.zst"}
+    - {path: datasets/sft/seeds/rag.jsonl.zst, repeat: 4}
+    - {path: datasets/sft/seeds/safety/safety_sft.jsonl.zst, repeat: 4}
+    - {path: "datasets/sft/safety/*.jsonl.zst"}
+    - {path: "datasets/sft/code/*.jsonl.zst"}
+    - {path: datasets/sft/seeds/formatting.jsonl.zst, repeat: 8}
+    - {path: datasets/sft/seeds/identity/identity_sft.jsonl.zst, repeat: 8}
+    - {path: "datasets/sft/long/*.jsonl.zst"}
+sft: {train_on: all, packing: true}
+epochs: 2
+seq_len: 4096                       # long table / RAG data: a second run with seq_len=8192 micro_batch_size=2
+micro_batch_size: 4
+grad_accum: 8                       # ~128K token slots per step
+optimizer: {lr: 2.0e-5, weight_decay: 0.0, betas: [0.9, 0.95], grad_clip: 1.0}
+schedule: {name: cosine, warmup: 0.03, min_lr_ratio: 0.1}
+precision: bf16
+gradient_checkpointing: true
+log_every: 10
+eval_every: 200
+save_every: 500

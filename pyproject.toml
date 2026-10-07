@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dsm-llm"
+version = "0.1.0"
+description = "DSM1.0-0.8B: a compact, offline, trilingual (Khmer / English / Chinese) language model - architecture, data, training, evaluation and local inference."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [{ name = "Doslarb" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# Core = what is needed to load, run and fine-tune a DSM checkpoint.
+dependencies = [
+    "torch>=2.5",
+    "transformers==5.19.*",
+    "tokenizers>=0.22",
+    "safetensors>=0.5",
+    "numpy>=1.26",
+    "pyyaml>=6.0",
+    "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+# Data collection / cleaning / dataset builders.
+data = [
+    "datasets>=3.0",
+    "regex>=2024.4.16",
+    "zstandard>=0.22",
+    "openpyxl>=3.1",
+    "pandas>=2.1",
+    "markdown-it-py>=3.0",
+    "pylatexenc>=2.10",
+    "jsonschema>=4.20",
+]
+# Benchmarks (lm-evaluation-harness) and MT metrics.
+eval = ["lm-eval>=0.4.8", "sacrebleu>=2.4"]
+# GPU kernels for Gated DeltaNet (Triton). Strongly recommended for training on GPU.
+kernels = ["flash-linear-attention>=0.5.2"]
+dev = [
+    "dsm-llm[data]",
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "gguf>=0.10",
+    "sacrebleu>=2.4",
+]
+
+[project.scripts]
+dsm = "dsm.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+dsm = ["tokenizer/*.jinja", "py.typed"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+extend-exclude = ["src/dsm/data/khmer/khnormal.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+ignore = ["E501", "B008", "SIM108", "UP007", "UP045"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["dsm"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "realvocab: needs the real 248K-token vocabulary fixture (downloaded once from GitHub and cached)",
+    "network: test is allowed to open network connections",
+    "slow: slower CPU test (seconds to a minute)",
+    "llamacpp: needs a llama.cpp checkout (DSM_LLAMA_CPP) and, for runtime checks, its binaries",
+]
