@@ -9,13 +9,13 @@ Deterministic builders (no model needed)::
 Public datasets (rows exported to JSON / JSONL / Parquet)::
 
     dsm build convert --dataset xlam --input raw/xlam.json --out datasets/sft/xlam.jsonl.zst
-    dsm build convert --dataset chat --input raw/smoltalk2/*.parquet --license Apache-2.0 --source smoltalk2
+    dsm build convert --dataset chat --source smoltalk2 --input datasets/raw/smoltalk2 --out datasets/sft/chat/smoltalk2.jsonl.zst
 
 With a LOCAL teacher / translator (configs/teacher.yaml)::
 
     dsm build translate --input datasets/sft/tools.jsonl.zst --target km --out datasets/sft/tools-km.jsonl.zst
     dsm build regenerate --input datasets/sft/chat-zh.jsonl.zst --out datasets/sft/chat-zh-regen.jsonl.zst
-    dsm build safety --public raw/aegis.jsonl --converter aegis2 --teacher --out datasets/sft/safety
+    dsm build safety --public datasets/raw/aegis2 --converter aegis2 --teacher --out datasets/sft/safety/aegis2.jsonl.zst
 
 Preference pairs and checks::
 
@@ -130,11 +130,12 @@ def cmd_rag(args) -> None:
     from dsm.data.builders.rag import RagBuilder
 
     builder = RagBuilder(_seed("rag/kb.yaml"), seed=args.seed)
-    records = builder.build()
-    if args.documents:
-        records += builder.qa_from_documents(
+    if args.documents:  # only QA on your documents (the seed QA comes from `dsm build seeds`)
+        records = builder.qa_from_documents(
             read_rows(args.documents), _teacher(args.teacher_config, "teacher")
         )
+    else:
+        records = builder.build()
     _report("rag", _write(Path(args.out), records), Path(args.out))
 
 
@@ -143,13 +144,16 @@ def cmd_safety(args) -> None:
 
     out = Path(args.out)
     builder = SafetyBuilder(_seed("safety/bank.yaml"), load_policy("configs/safety_policy.yaml"))
-    sft, prefs = builder.from_seeds()
-    if args.public:
+    if args.public:  # only the public prompts (the bank seeds come from `dsm build seeds`)
         if args.converter not in CONVERTERS:
             raise SystemExit(f"--converter must be one of {sorted(CONVERTERS)}")
         rows = [r for r in (CONVERTERS[args.converter](row) for row in read_rows(args.public)) if r]
         teacher = _teacher(args.teacher_config, "teacher") if args.teacher else None
-        sft += builder.respond(rows, teacher=teacher)
+        sft = builder.respond(rows, teacher=teacher)
+        target = out if out.name.endswith((".jsonl", ".jsonl.zst")) else out / f"{args.converter}.jsonl.zst"
+        _report(f"safety/{args.converter}", _write(target, sft), target)
+        return
+    sft, prefs = builder.from_seeds()
     _write(out / "safety_sft.jsonl.zst", sft)
     _write(out / "safety_dpo.jsonl.zst", prefs)
     _report("safety", len(sft), out, {"preference": len(prefs)})
@@ -180,9 +184,22 @@ def cmd_seeds(args) -> None:
 
 def cmd_convert(args) -> None:
     from dsm.data.builders.datasets import DATASETS, convert_dataset
+    from dsm.data.sources import check, load_sources
 
+    catalogue = load_sources()
+    if args.dataset is None and args.source in catalogue:
+        args.dataset = catalogue[args.source].converter
     if args.dataset not in DATASETS:
-        raise SystemExit(f"--dataset must be one of {sorted(DATASETS)}")
+        raise SystemExit(f"--dataset must be one of {sorted(DATASETS)} (or a --source with a converter)")
+    if args.source in catalogue:  # licence and producer from the catalogue, through the licence gate
+        source = catalogue[args.source]
+        decision = check(source, accept_counsel=args.accept_counsel)
+        if not decision.allowed:
+            raise SystemExit(f"licence gate: {source.name}: {decision.reason}")
+        args.license = args.license or source.license
+        args.generated_by = args.generated_by or source.generated_by
+    elif args.source:
+        print(f"note: {args.source!r} is not in configs/data/sources.yaml - no licence gate applied")
     rows = read_rows(args.input)
     if args.limit:
         rows = rows[: args.limit]
@@ -221,7 +238,7 @@ def cmd_regenerate(args) -> None:
 def cmd_preference(args) -> None:
     from dsm.data.builders import preference
 
-    records = list(read_jsonl(args.input))
+    records = [record for path in args.input for record in read_jsonl(path)]
     if args.kind == "language":
         pairs = preference.language_pairs(records, seed=args.seed)
     elif args.kind == "format":
@@ -291,11 +308,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--teacher", action="store_true", help="answer public prompts with the local teacher")
     add("seeds", cmd_seeds, "all deterministic builders").add_argument("--per-weight", type=int, default=10)
     p = add("convert", cmd_convert, "convert a public dataset")
-    p.add_argument("--dataset", required=True)
+    p.add_argument("--dataset", help="converter (default: the catalogue entry's converter)")
     p.add_argument("--input", nargs="+", required=True)
     p.add_argument("--license")
     p.add_argument("--generated-by")
-    p.add_argument("--source")
+    p.add_argument("--source", help="catalogue name: licence, producer and licence gate from the catalogue")
+    p.add_argument(
+        "--accept-counsel", action="store_true", help="allow 'needs_counsel' sources (after sign-off)"
+    )
     p.add_argument("--limit", type=int)
     p = add("translate", cmd_translate, "translate SFT records with the local translator (protected spans)")
     p.add_argument("--input", required=True)
@@ -304,7 +324,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--input", required=True)
     p = add("preference", cmd_preference, "build DPO pairs")
     p.add_argument("--kind", choices=("language", "format", "over_refusal", "judged"), required=True)
-    p.add_argument("--input", required=True)
+    p.add_argument("--input", nargs="+", required=True)
     p.add_argument("--samples", type=int, default=4)
     p = add("validate", cmd_validate, "validate SFT / DPO files", out=False)
     p.add_argument("files", nargs="+")

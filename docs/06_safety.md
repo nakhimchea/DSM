@@ -85,10 +85,10 @@ Without a teacher, harmful prompts get the template refusals from the seed file,
 prompts are skipped.
 
 ```bash
-dsm build safety --out datasets/sft/safety                                # bank seeds only
-dsm build safety --out datasets/sft/safety --public raw/xstest.jsonl \
-    --converter xstest --teacher                                           # + teacher responses
-dsm build preference --kind over_refusal --input datasets/sft/benign.jsonl.zst \
+dsm build safety --out datasets/sft/seeds/safety                         # bank seeds (also in `dsm build seeds`)
+dsm build safety --public datasets/raw/xstest --converter xstest --teacher \
+    --out datasets/sft/safety/xstest.jsonl.zst                              # public prompts, teacher responses
+dsm build preference --kind over_refusal --input datasets/sft/safety/*.jsonl.zst \
     --out datasets/dpo/over_refusal.jsonl.zst                               # helpful > refusal pairs
 ```
 

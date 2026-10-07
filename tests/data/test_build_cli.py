@@ -61,6 +61,25 @@ def test_build_convert_and_preference(tmp_path):
             ["build", "convert", "--dataset", "chat", "--input", str(raw), "--out", str(tmp_path / "c.jsonl")]
         )
 
+    # --source names a catalogue entry: licence and producer come from it, through the licence gate
+    chat = tmp_path / "chat.jsonl"
+    chat.write_text(
+        json.dumps(
+            {"messages": [{"role": "user", "content": "Hi"}, {"role": "assistant", "content": "Hello!"}]}
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "smoltalk2.jsonl"
+    args = ["build", "convert", "--dataset", "chat", "--input", str(chat), "--out", str(out)]
+    assert dsm_main([*args, "--source", "smoltalk2"]) == 0
+    (record,) = read_jsonl(out)
+    assert record["license"] == "Apache-2.0" and record["source"] == "smoltalk2"
+    with pytest.raises(SystemExit, match="licence gate: pku_saferlhf"):
+        dsm_main([*args, "--source", "pku_saferlhf"])
+    with pytest.raises(SystemExit, match="counsel"):
+        dsm_main([*args, "--source", "numinamath_1_5"])
+
     tables = tmp_path / "tables.jsonl"
     assert dsm_main(["build", "tables", "--out", str(tables), "--per-weight", "1"]) == 0
     pairs = tmp_path / "format_dpo.jsonl"

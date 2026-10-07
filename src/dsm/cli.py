@@ -16,6 +16,7 @@ from dsm.env import enforce_offline
 
 # command -> (module exposing ``main(argv) -> int``, one-line help)
 COMMANDS: dict[str, tuple[str, str]] = {
+    "fetch": ("dsm.convert.fetch", "download the upstream checkpoints once (connected machine)"),
     "convert": ("dsm.convert.upstream", "convert an upstream checkpoint into a DSM checkpoint"),
     "verify": ("dsm.convert.verify", "check a DSM checkpoint against the upstream one (logits, tokenizer)"),
     "audit": ("dsm.audit.cli", "audit a model directory / the repo for branding, files and network use"),

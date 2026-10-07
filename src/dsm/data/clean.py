@@ -52,6 +52,7 @@ def clean_records(
     strict_pii: bool = False,
     stats: Counter | None = None,
     min_chars: int = 200,
+    keep_fields: tuple[str, ...] = (),
 ) -> Iterator[dict]:
     stats = stats if stats is not None else Counter()
     for index, row in enumerate(rows):
@@ -88,5 +89,6 @@ def clean_records(
             "meta": {
                 "lang_confidence": round(confidence, 3),
                 **{k: round(v, 4) for k, v in report.stats.items()},
+                **{k: row[k] for k in keep_fields if isinstance(row.get(k), (str, int, float, bool))},
             },
         }

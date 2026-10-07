@@ -30,3 +30,15 @@ translator:
   timeout_s: 180
   max_retries: 3
   generation: {temperature: 0.2, top_p: 0.9, max_tokens: 2048}
+
+# The model being trained, served locally for on-policy DPO sampling
+# (`dsm build preference --kind judged`), e.g.
+#   dsm export serve --gguf exports/sft/DSM1.0-0.8B-Q8_0.gguf --port 8090
+policy:
+  base_url: "http://127.0.0.1:8090/v1"
+  model: "dsm"
+  name: "dsm-sft"
+  license: "apache-2.0"
+  timeout_s: 180
+  max_retries: 3
+  generation: {temperature: 0.8, top_p: 0.95, max_tokens: 1024}

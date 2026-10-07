@@ -87,9 +87,26 @@ dsm chat --endpoint http://127.0.0.1:8080/v1                               # ter
 * `--jinja`, so the template and tool parsing come from the GGUF;
 * `--reasoning-format none` (DSM is fast-only);
 * `--offline` and `--no-webui`;
-* an optional `--api-key`.
+* an optional `--api-key`;
+* `--no-repack` whenever `--parallel` is above 1 (see the known issue below).
 
 The API is OpenAI-compatible, so `tools` in a request come back as structured `tool_calls`.
+
+**Known llama.cpp issue (pinned commit).** On CPU, llama.cpp repacks quantised weights (Q8_0,
+Q4_0, ...) into interleaved layouts for faster prompt processing. For this hybrid architecture,
+repacked weights give wrong results when two or more sequences share a batch:
+
+* concurrent requests to a `llama-server` with `--parallel 2` return different, corrupted text,
+  where sequential requests are correct;
+* `llama-perplexity` reports `nan` for a Q8_0 model, because it batches several chunks.
+
+With `--no-repack`, concurrent answers equal the sequential ones and the perplexity is finite, and
+BF16 / F16 weights are not affected. GPU offload does not use repacking. `dsm export serve` and
+the KL check (`dsm export kl`) therefore switch repacking off whenever more than one sequence can
+be decoded at once. `--repack` forces it back on for a single user with `--parallel 1`.
+`tests/export/test_export.py::test_quantized_model_with_parallel_requests` reproduces the
+problem. Re-run it when you update llama.cpp: if it passes with `repack=True`, the upstream bug is
+fixed.
 
 Responsibilities of the application layer:
 

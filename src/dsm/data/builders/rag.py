@@ -172,8 +172,14 @@ class RagBuilder:
 
         Pairs whose answer is not grounded (numbers missing from the document), in
         the wrong language or leaking another identity are dropped. Distractors are
-        other documents of the same language.
+        other documents of the same language. Cleaned documents (``dsm data clean``) work too:
+        a missing title becomes the first line of the text.
         """
+        documents = [
+            {**doc, "title": doc.get("title") or doc["text"].strip().split("\n", 1)[0][:80]}
+            for doc in documents
+            if doc.get("lang") in ("en", "km", "zh") and doc.get("text")
+        ]
         requests = []
         for doc in documents:
             language = {"en": "English", "km": "Khmer", "zh": "Chinese"}[doc["lang"]]

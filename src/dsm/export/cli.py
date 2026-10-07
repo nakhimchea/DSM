@@ -84,6 +84,7 @@ def cmd_serve(args) -> int:
         ctx=args.ctx,
         gpu_layers=args.gpu_layers,
         parallel=args.parallel,
+        repack=True if args.repack else None,
         api_key=args.api_key,
         webui=args.webui,
     )
@@ -127,6 +128,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--parallel", type=int, default=2)
     p.add_argument("--api-key")
     p.add_argument("--webui", action="store_true")
+    p.add_argument(
+        "--repack",
+        action="store_true",
+        help="force CPU weight repacking even with --parallel > 1 (see docs/11)",
+    )
     p.add_argument("--log", default="llama-server.log")
     p.set_defaults(fn=cmd_serve)
     args = parser.parse_args(argv)

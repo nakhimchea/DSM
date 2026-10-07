@@ -25,7 +25,7 @@ configs change, and the catalogue cannot be tested offline.
 | SFT | conversations | `smoltalk2`, `nemotron_post_training_v1`, `xlam`, `toolace`, `hermes_fc`, `glaive_fc_v2`, `when2call`, `tabfact`, `tatqa`, `finqa`, `gsm8k`, `hendrycks_math`, plus DSM's own builders | ~200K conversations |
 | DPO | preference pairs | `helpsteer3`, plus on-policy pairs and DSM builders | 20–40K pairs |
 | Safety | prompts (responses are generated locally) | `aegis2`, `wildguardmix`, `xstest`, `do_not_answer`, `safety_prompts_zh` | ~8 % of SFT |
-| Evaluation only | benchmarks | `belebele`, `flores_plus`, `sib200` | never trained on (`eval_only`) |
+| Evaluation only | benchmarks | `belebele*`, `flores_plus*`, `sib200*` (one entry per language) | never trained on (`eval_only`) |
 
 ## 2. Khmer: the scarce resource
 

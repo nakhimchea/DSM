@@ -26,8 +26,20 @@ pytest -q                                  # the whole test-suite runs on CPU in
 dsm --help                                 # all pipeline commands
 ```
 
-The step-by-step guide for a single 24 GB GPU, from downloading the upstream weights to serving
-DSM with `llama-server`, is [`docs/13_runbook_24gb.md`](docs/13_runbook_24gb.md).
+Building DSM on one 24 GB GPU follows numbered scripts. The v0.1 fast path takes 1–2 days:
+
+```bash
+scripts/00_setup.sh      # install, preflight, tests, llama.cpp
+scripts/10_fetch.sh      # the only online step: checkpoints, evaluation sets, chat replay
+scripts/20_convert.sh    # upstream -> DSM, verified against the reference implementation
+scripts/35_sft_data.sh   # identity, safety, tools, tables, formatting, RAG + converted chats
+scripts/40_fastpath.sh   # SFT -> evaluation gates -> GGUF
+scripts/90_serve.sh      # llama-server on 127.0.0.1 (OpenAI-compatible)
+```
+
+The full path (tokenizer pilot, continued pre-training, annealing, SFT, DPO) and every setting are
+in [`docs/13_runbook_24gb.md`](docs/13_runbook_24gb.md). CI runs all the scripts end to end on
+CPU with a tiny model.
 
 ## Documentation
 

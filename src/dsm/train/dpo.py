@@ -112,6 +112,9 @@ class DPOTrainer(BaseTrainer):
         if self.template is None:
             raise ValueError(f"{self.tok_dir} has no chat_template.jinja")
         self.pad_id = self.model.config.pad_token_id or 0
+        from dsm.train.config import expand_globs
+
+        cfg.train = expand_globs(cfg.train)
         rng = np.random.default_rng([cfg.seed, 0xD90])
         pool: list[Pair] = []
         self.stats = {}
@@ -230,12 +233,13 @@ class DPOTrainer(BaseTrainer):
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="dsm dpo", description="Direct preference optimisation.")
     parser.add_argument("--config", required=True)
+    parser.add_argument("--data", help="training data list from `dsm data mix --out` (replaces data.train)")
     parser.add_argument(
         "--set", action="append", default=[], metavar="KEY=VALUE", help="override a config value"
     )
     parser.add_argument("--bench", type=int, help="run N steps without saving and report speed")
     args = parser.parse_args(argv)
-    cfg = load_config(args.config, args.set)
+    cfg = load_config(args.config, args.set, args.data)
     if cfg.stage != "dpo":
         raise SystemExit("dsm dpo needs stage: dpo")
     trainer = DPOTrainer(cfg)

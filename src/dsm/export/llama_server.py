@@ -33,6 +33,10 @@ class ServerConfig:
     webui: bool = False
     extra: list[str] = field(default_factory=list)
     allow_remote_bind: bool = False
+    # CPU weight repacking. At the pinned llama.cpp commit it corrupts this architecture's
+    # outputs when two sequences are decoded in one batch (docs/11), so by default it is used
+    # only when a single request runs at a time (it speeds up CPU prompt processing).
+    repack: bool | None = None
 
 
 def server_command(cfg: ServerConfig, binary: str | Path) -> list[str]:
@@ -54,6 +58,8 @@ def server_command(cfg: ServerConfig, binary: str | Path) -> list[str]:
     ]  # fmt: skip
     if not cfg.webui:
         cmd.append("--no-webui")
+    if not (cfg.repack if cfg.repack is not None else cfg.parallel == 1):
+        cmd.append("--no-repack")
     if cfg.threads:
         cmd += ["-t", str(cfg.threads)]
     if cfg.api_key:

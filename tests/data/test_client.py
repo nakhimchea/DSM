@@ -104,3 +104,13 @@ def test_retries_then_none(server, monkeypatch):
     assert teacher.chat([{"role": "user", "content": "x"}]) == "echo: x"
     _Handler.fail_first = 5
     assert teacher.chat([{"role": "user", "content": "y"}]) is None
+
+
+def test_shipped_teacher_config_has_every_role():
+    """teacher (responses, judging), translator, and policy (on-policy DPO sampling)."""
+    from dsm.data.synth.client import LocalTeacher
+
+    for role in ("teacher", "translator", "policy"):
+        teacher = LocalTeacher.from_config("configs/teacher.yaml", role=role)
+        assert teacher.base_url.startswith("http://127.0.0.1:")
+        assert teacher.license in ("apache-2.0", "mit")

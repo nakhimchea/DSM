@@ -106,10 +106,49 @@ dsm data pack --input datasets/final/fineweb2_km.jsonl.zst --tokenizer work/mode
 ```
 
 Documents are tokenised with the model's own `tokenizer.json` and concatenated, each ending with
-`<|endoftext|>`. The metadata records the tokenizer hash, so a packed set cannot silently be used
-with a different (for example Khmer-extended) tokenizer. The trainer cuts fixed windows from the
+`<|endoftext|>`. The metadata records the tokenizer hash, and the trainer refuses a pack made with
+a different (for example Khmer-extended) tokenizer. The trainer cuts fixed windows from the
 stream and restarts positions at each document start, which keeps documents isolated. The data
 card lands in `datasets/packed/km_web.card/`.
+
+`--heldout 0.002 --heldout-out datasets/packed/eval_km` leaves a fixed 0.2 % of the documents
+(chosen by id) out of the pack and packs them as the evaluation set. Pass `--heldout` to every
+training pack. `dsm data select --sample 0.002` picks exactly the same documents, for example as
+plain text for llama.cpp's KL check.
+
+### Select (`dsm data select`)
+
+```bash
+dsm data select --input datasets/final/fineweb2_km.jsonl.zst --min chars=1500 khmer_share=0.9 \
+    --max khmer_broken_per_1k=1 dup_lines=0.05 --out datasets/final/km_hq.jsonl.zst
+dsm data select --input datasets/final/*.jsonl.zst --sample 0.05 --seed 1 --out datasets/final/replay.jsonl.zst
+```
+
+Bounds apply to the statistics `clean` stores in each document's `meta` (`--keep-fields int_score`
+at cleaning keeps a source's own score). `--sample` keeps a deterministic fraction by id;
+`--invert` keeps the complement, which gives clean train / held-out splits. Use a seed other than
+0 for samples that should not coincide with the held-out documents.
+
+### Parallel text (`dsm data parallel`)
+
+```bash
+dsm data parallel --layout aligned --source alt_km_en --input datasets/raw/alt_km_en \
+    --out-docs datasets/dedup/parallel_alt.jsonl.zst --out-sft datasets/sft/khmer/alt.jsonl.zst \
+    --out-pairs datasets/parallel/alt.jsonl.zst
+```
+
+Three layouts: `aligned` (a dict of languages per row, ALT / OPUS), `grouped` (one language per
+row, rows with the same id aligned: FLORES+, MASSIVE) and `pairs` (TICO-19 style). Sentences must
+be in their language's script, and pairs with wildly different lengths are dropped. The outputs
+are CPT documents (each sentence followed by its translations, language order varied), sentence
+pairs in every direction, and translation conversations for SFT. Evaluation sources may only
+produce pairs.
+
+### Evaluation sets (`dsm data evalset`)
+
+`--kind belebele` and `--kind sib200 --lang km` write `dsm eval choice` rows; `--kind safety
+--converter xstest` writes held-out safety prompts. Put them in `datasets/eval/`, which
+`decontam` indexes.
 
 For annealing, SFT conversations can be added as plain text:
 `dsm data render-sft --input datasets/sft/*.jsonl.zst --tokenizer work/models/dsm-base --out datasets/clean/instructions_text.jsonl.zst`,
@@ -124,15 +163,17 @@ dsm data mix --config configs/data/mix_sft.yaml      # conversation shares -> re
 
 For pre-training, `plan_mixture` turns target shares, available tokens and per-source epoch caps
 into sampling weights. Shares that would exceed a cap (usually Khmer) are capped, and the
-difference is redistributed proportionally. For SFT and DPO, repeat factors make each file reach
-its share of conversations. The printed YAML snippet goes into the training config.
+difference is redistributed proportionally. Packs that do not exist or are empty are left out with
+a warning. For SFT and DPO, repeat factors make each source reach its share of conversations; a
+source may list several files (`paths:` with globs). `--out work/mix/sft.yaml` writes the list,
+and `dsm train --data work/mix/sft.yaml` uses it; `--total` overrides the budget.
 
 ## 3. SFT and preference data
 
 | Step | Command | Notes |
 |---|---|---|
 | DSM's own data | `dsm build seeds --out datasets/sft/seeds` | identity, tools (bank simulator), tables (formulas verified), formatting, RAG, safety; km/en/zh |
-| public datasets | `dsm build convert --dataset xlam --input raw/xlam --out ...` | dialects normalised to one schema, validated per record |
+| public datasets | `dsm build convert --source xlam --input datasets/raw/xlam --out datasets/sft/tools/xlam.jsonl.zst` | converter, licence and licence gate from the catalogue; dialects normalised to one schema, validated per record |
 | Khmer / Chinese versions | `dsm build translate --target km --input ... --out ...` | local translator; code, math, URLs and placeholders protected; numbers and tables checked |
 | better answers | `dsm build regenerate --input ... --out ...` | local teacher rewrites assistant turns; identity, language, refusal and format filters |
 | preference pairs | `dsm build preference --kind format\|language\|over_refusal\|judged` | judged = on-policy samples from the SFT model + a local judge |

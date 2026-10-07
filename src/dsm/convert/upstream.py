@@ -199,6 +199,26 @@ def copy_remote_code(out_dir: Path) -> None:
         shutil.copyfile(package / name, out_dir / name)
 
 
+def write_lineage(out: Path, src: Path, num_parameters: int) -> None:
+    """``lineage.json`` starts here: the source revision (``dsm fetch`` writes FETCH.json next to
+    the checkpoints) and the hash of every source weight file. No upstream names: see NOTICE."""
+    import datetime as dt
+
+    from dsm.utils import sha256_file
+
+    fetch = src.parent / "FETCH.json"
+    manifest = json.loads(fetch.read_text(encoding="utf-8")) if fetch.is_file() else {}
+    entry = {
+        "stage": "convert",
+        "source": "upstream checkpoint (see NOTICE)",
+        "source_revision": manifest.get(src.name, {}).get("revision"),
+        "source_weights_sha256": {p.name: sha256_file(p) for p in sorted(src.glob("*.safetensors"))},
+        "num_parameters": num_parameters,
+        "date": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+    }
+    (out / "lineage.json").write_text(json.dumps([entry], indent=2) + "\n", encoding="utf-8")
+
+
 def convert(
     src: str | Path,
     out: str | Path,
@@ -261,6 +281,7 @@ def convert(
     write_license(out, src / "LICENSE")
     write_notice(out, identity, upstream, MODIFICATIONS)
     write_model_card(out, identity, report.num_parameters)
+    write_lineage(out, src, report.num_parameters)
 
     if audit:
         report.audit_findings = scrub_model_dir(out, upstream)

@@ -8,6 +8,10 @@
     dsm data pack --input datasets/final/fineweb2_km.jsonl.zst --tokenizer work/models/dsm-base --out datasets/packed/km_web
     dsm data mix --config configs/data/mix_cpt.yaml
 
+    dsm data select --input datasets/final/km_web.jsonl.zst --min chars=1500 --max khmer_broken_per_1k=2 --out ...
+    dsm data parallel --layout aligned --source alt_km_en --input datasets/raw/alt_km_en --out-docs ... --out-pairs ...
+    dsm data evalset --kind belebele --input datasets/raw/belebele_km --out datasets/eval/belebele.jsonl
+
 Every stage writes ``<output>.stats.json`` (counts per drop reason, PII
 replacements, licences); ``pack`` turns the chain into ``DATACARD.md``.
 """
@@ -166,6 +170,7 @@ def cmd_clean(args) -> int:
         strict_pii=internal or args.strict_pii,
         stats=stats,
         min_chars=args.min_chars,
+        keep_fields=tuple(args.keep_fields or ()),
     )
     write_jsonl(out, cleaned)
     _save_stats(out, inputs, "clean", stats, meta)
@@ -241,6 +246,7 @@ def cmd_pack(args) -> int:
     from dsm.data.cards import write_card
     from dsm.data.packed import pack_texts, tokenizer_hash
     from dsm.tokenizer import special_token_ids
+    from dsm.utils import id_fraction
 
     tokenizer_json = Path(args.tokenizer) / "tokenizer.json"
     tokenizer = Tokenizer.from_file(str(tokenizer_json))
@@ -252,9 +258,14 @@ def cmd_pack(args) -> int:
     licenses = sorted({s.get("license", "?") for s in stats["sources"].values()})
     langs: Counter = Counter()
 
+    heldout: list[str] = []
+
     def texts():
         for path in inputs:
             for record in read_jsonl(path):
+                if args.heldout and id_fraction(record["id"]) < args.heldout:
+                    heldout.append(record["text"])  # evaluation documents: never in a training pack
+                    continue
                 langs[record.get("lang", "und")] += 1
                 yield record["text"]
 
@@ -274,7 +285,23 @@ def cmd_pack(args) -> int:
         },
     )
     meta_path = out.with_name(out.name + ".json")
-    meta = {**meta, "langs": dict(langs)}
+    meta = {**meta, "langs": dict(langs), "heldout_fraction": args.heldout}
+    if args.heldout_out:
+        held = pack_texts(
+            heldout,
+            tokenizer,
+            Path(args.heldout_out),
+            eos_id=eos,
+            vocab_size=vocab,
+            meta={
+                "name": Path(args.heldout_out).name,
+                "heldout_of": name,
+                "tokenizer": tokenizer_hash(tokenizer_json),
+            },
+        )
+        print(
+            f"held out {held['n_docs']:,} documents ({held['n_tokens']:,} tokens) -> {args.heldout_out}.bin"
+        )
     meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     sources = [{"name": n, **v} for n, v in stats["sources"].items()]
     stats["stages"]["pack"] = Counter({"documents": meta["n_docs"], "tokens": meta["n_tokens"]})
@@ -318,14 +345,21 @@ def cmd_mix(args) -> int:
     from dsm.utils import load_yaml
 
     cfg = load_yaml(args.config)
+    if args.total:
+        cfg["total" if cfg.get("kind") in ("sft", "preference") else "total_tokens"] = args.total
     if cfg.get("kind") in ("sft", "preference"):
         return _mix_conversations(cfg, args.out)
     available = {}
-    for name, entry in cfg["sources"].items():
+    for name, entry in list(cfg["sources"].items()):
         try:
             available[name] = PackedTokens(entry["path"]).n_tokens
         except FileNotFoundError:
-            available[name] = float(entry.get("tokens", 0))
+            if entry.get("tokens"):  # planning before the data exists
+                available[name] = float(entry["tokens"])
+        if not available.get(name):
+            print(f"warning: {name}: {entry['path']} not packed or empty - left out of the mixture")
+            available.pop(name, None)
+            del cfg["sources"][name]
     targets = {name: entry["share"] for name, entry in cfg["sources"].items()}
     caps = {name: entry.get("max_epochs", cfg.get("max_epochs", 4)) for name, entry in cfg["sources"].items()}
     plan = plan_mixture(available, targets, float(cfg["total_tokens"]), caps)
@@ -339,24 +373,40 @@ def cmd_mix(args) -> int:
         {"path": cfg["sources"][n]["path"], "weight": round(plan.weights[n], 4), "name": n} for n in targets
     ]
     snippet = yaml.safe_dump({"data": {"train": train}}, sort_keys=False, allow_unicode=True)
-    print("\n# paste into the training config:\n" + snippet)
+    print("\n# use with `dsm train --data <this file>` (or paste into the training config):\n" + snippet)
     if args.out:
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         Path(args.out).write_text(snippet, encoding="utf-8")
     return 0
 
 
+def _entry_files(entry: dict) -> list[Path]:
+    """``path`` or ``paths`` (files or glob patterns) of a mixture entry."""
+    import glob
+
+    files: list[Path] = []
+    for pattern in entry.get("paths") or [entry["path"]]:
+        matches = sorted(glob.glob(str(pattern)))
+        files += [Path(m) for m in matches] if matches else [Path(pattern)]
+    return files
+
+
 def _mix_conversations(cfg: dict, out: str | None) -> int:
-    """SFT / DPO: repeat factors per file so each makes up its target share of examples."""
+    """SFT / DPO: repeat factors so each source (one or more files) makes up its share of examples."""
     import yaml
 
     from dsm.data.mixture import repeats_for_shares
 
-    counts = {
-        name: sum(1 for _ in read_jsonl(entry["path"]))
-        if Path(entry["path"]).is_file()
-        else int(entry.get("count", 0))
-        for name, entry in cfg["sources"].items()
-    }
+    files = {name: _entry_files(entry) for name, entry in cfg["sources"].items()}
+    counts = {}
+    for name, entry in cfg["sources"].items():
+        present = [f for f in files[name] if f.is_file()]
+        for missing in sorted(set(files[name]) - set(present)):
+            print(f"warning: {name}: {missing} not found")
+        counts[name] = (
+            sum(sum(1 for _ in read_jsonl(f)) for f in present) if present else int(entry.get("count", 0))
+        )
+        files[name] = present or files[name]  # nothing built yet: keep the planned paths
     targets = {name: entry["share"] for name, entry in cfg["sources"].items()}
     repeats = repeats_for_shares(counts, targets, cfg.get("total"))
     print(f"{'source':28} {'count':>9} {'share':>6} {'repeat':>7}")
@@ -365,12 +415,161 @@ def _mix_conversations(cfg: dict, out: str | None) -> int:
             f"{name:28} {counts[name]:9,} {targets[name] / sum(targets.values()):6.3f} {repeats.get(name, 0):7.3f}"
         )
     train = [
-        {"path": cfg["sources"][n]["path"], "repeat": repeats[n], "name": n} for n in targets if n in repeats
+        {
+            "path": str(f),
+            "repeat": repeats[n],
+            "name": n if len(files[n]) == 1 else f"{n}:{f.name.split('.')[0]}",
+        }
+        for n in targets
+        if n in repeats
+        for f in files[n]
     ]
     snippet = yaml.safe_dump({"data": {"train": train}}, sort_keys=False, allow_unicode=True)
-    print("\n# paste into the training config:\n" + snippet)
+    print("\n# use with `dsm train/dpo --data <this file>` (or paste into the training config):\n" + snippet)
     if out:
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
         Path(out).write_text(snippet, encoding="utf-8")
+    return 0
+
+
+def _bounds(items: list[str] | None) -> dict[str, float]:
+    out = {}
+    for item in items or []:
+        key, sep, value = item.partition("=")
+        if not sep:
+            raise SystemExit(f"expected KEY=VALUE, got {item!r}")
+        out[key] = float(value)
+    return out
+
+
+def cmd_select(args) -> int:
+    """Keep documents whose ``meta`` statistics pass every bound; optionally a fixed sample."""
+    from dsm.utils import id_fraction
+
+    lower, upper = _bounds(args.min), _bounds(args.max)
+    inputs = _files(args.input)
+    stats: Counter = Counter()
+
+    def reason(record: dict) -> str | None:
+        meta = record.get("meta") or {}
+        for bounds, fails, word in ((lower, float.__lt__, "below"), (upper, float.__gt__, "above")):
+            for key, bound in bounds.items():
+                if not isinstance(meta.get(key), (int, float)):
+                    return f"missing_{key}"
+                if fails(float(meta[key]), bound):
+                    return f"{word}_{key}"
+        if args.sample < 1.0 and (id_fraction(record["id"], args.seed) < args.sample) == args.invert:
+            return "sampled_out" if args.invert else "not_sampled"
+        return None
+
+    def selected():
+        for path in inputs:
+            for record in read_jsonl(path):
+                stats["input"] += 1
+                why = reason(record)
+                if why:
+                    stats[f"drop: {why}"] += 1
+                    continue
+                stats["kept"] += 1
+                yield record
+                if args.max_docs and stats["kept"] >= args.max_docs:
+                    return
+
+    out = Path(args.out)
+    if out.suffix == ".txt":  # plain text, documents separated by blank lines (llama.cpp tools)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with open(out, "w", encoding="utf-8") as handle:
+            for record in selected():
+                handle.write(record["text"].strip() + "\n\n")
+    else:
+        write_jsonl(out, selected())
+        _save_stats(out, inputs, "select", stats)
+    print(f"selected {stats['kept']:,} of {stats['input']:,} documents -> {out}")
+    return 0
+
+
+def cmd_parallel(args) -> int:
+    from dsm.data.builders.translation import parallel_to_sft
+    from dsm.data.parallel import aligned_items, clean_item, read_rows, to_documents, to_pairs
+    from dsm.data.pii import redact
+    from dsm.data.sources import check, load_sources
+
+    if args.source:
+        source = load_sources(args.catalogue)[args.source]
+        purpose = "eval" if source.tier == "eval_only" else "train"
+        decision = check(source, purpose=purpose, **_gate_flags(args))
+        if not decision.allowed:
+            raise SystemExit(f"licence gate: {source.name}: {decision.reason}")
+        name, license, generated_by = source.name, source.license, source.generated_by
+        if purpose == "eval" and (args.out_docs or args.out_sft):
+            raise SystemExit(f"{name} is an evaluation set: only --out-pairs is allowed")
+    elif args.name and args.license:
+        name, license, generated_by = args.name, args.license, args.generated_by
+    else:
+        raise SystemExit("pass --source (catalogue name) or --name and --license")
+    inputs = []
+    for raw in args.input:
+        path = Path(raw)
+        inputs += (
+            sorted(p for p in path.rglob("*") if p.is_file() and p.suffix in (".jsonl", ".zst", ".tsv"))
+            if path.is_dir()
+            else [path]
+        )
+    stats: Counter = Counter()
+    items = []
+    for item in aligned_items((row for path in inputs for row in read_rows(path)), args.layout):
+        stats["input"] += 1
+        cleaned = clean_item(item, args.langs, args.max_ratio, stats)
+        if cleaned is not None:
+            items.append(cleaned)
+    stats["kept"] = len(items)
+    meta = {name: {"kind": "parallel", "langs": args.langs, "license": license, "generated_by": generated_by}}
+    if args.out_docs:
+        docs = to_documents(
+            items,
+            source=name,
+            license=license,
+            generated_by=generated_by,
+            per_doc=args.per_doc,
+            seed=args.seed,
+        )
+        for doc in docs:
+            doc["text"], found = redact(doc["text"])
+            for label, count in found.items():
+                stats[f"pii: {label}"] += count
+        write_jsonl(args.out_docs, docs)
+        _save_stats(Path(args.out_docs), inputs, "parallel", stats, meta)
+    pairs = to_pairs(items, source=name, license=license)
+    if args.out_pairs:
+        write_jsonl(args.out_pairs, pairs)
+    if args.out_sft:
+        write_jsonl(args.out_sft, parallel_to_sft(pairs, source=name, license=license, seed=args.seed))
+    print(f"{name}: {len(items):,} aligned items of {stats['input']:,} ({len(pairs):,} directed pairs)")
+    return 0
+
+
+def cmd_evalset(args) -> int:
+    from dsm.data.evalsets import belebele_rows, sib_rows
+    from dsm.data.parallel import read_rows
+
+    rows = (row for path in _files(args.input) for row in read_rows(path))
+    if args.kind == "safety":
+        from dsm.data.builders.safety import CONVERTERS
+
+        if args.converter not in CONVERTERS:
+            raise SystemExit(f"--kind safety needs --converter, one of {sorted(CONVERTERS)}")
+        items = [item for item in (CONVERTERS[args.converter](row) for row in rows) if item]
+        write_jsonl(args.out, items)
+        print(f"safety/{args.converter}: {len(items):,} held-out prompts -> {args.out} (never train on them)")
+        return 0
+    if args.kind == "sib200":
+        if args.lang not in ("km", "en", "zh"):
+            raise SystemExit("--kind sib200 needs --lang km|en|zh (SIB rows carry no language)")
+        items = list(sib_rows(rows, args.lang))
+    else:
+        items = list(belebele_rows(rows, args.lang))
+    write_jsonl(args.out, items)
+    print(f"{args.kind}: {len(items):,} items -> {args.out}")
     return 0
 
 
@@ -408,6 +607,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--out", required=True)
     p.add_argument("--text-field", default="text")
     p.add_argument("--min-chars", type=int, default=200)
+    p.add_argument(
+        "--keep-fields", nargs="*", help="raw fields copied into meta (e.g. int_score url) for `select`"
+    )
     p.set_defaults(fn=cmd_clean)
     p = sub.add_parser("dedup", help="exact + MinHash near-duplicate removal (earlier inputs win)")
     p.add_argument("--input", nargs="+", required=True)
@@ -424,6 +626,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--tokenizer", required=True, help="model directory with tokenizer.json")
     p.add_argument("--out", required=True, help="output prefix, e.g. datasets/packed/km_web")
     p.add_argument("--name")
+    p.add_argument(
+        "--heldout", type=float, default=0.0, help="leave out this fraction of documents (fixed by id)"
+    )
+    p.add_argument("--heldout-out", help="pack the held-out documents here (an evaluation set)")
     p.set_defaults(fn=cmd_pack)
     p = sub.add_parser("render-sft", help="SFT conversations -> plain-text documents (annealing)")
     p.add_argument("--input", nargs="+", required=True)
@@ -433,7 +639,44 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("mix", help="mixture weights from target shares, token counts and epoch caps")
     p.add_argument("--config", required=True)
     p.add_argument("--out")
+    p.add_argument("--total", type=float, help="override the budget (tokens, or conversations / pairs)")
     p.set_defaults(fn=cmd_mix)
+    p = sub.add_parser("select", help="keep documents by meta statistics (high-quality subsets, samples)")
+    p.add_argument("--input", nargs="+", required=True)
+    p.add_argument("--out", required=True)
+    p.add_argument("--min", nargs="*", metavar="KEY=VALUE", help="e.g. chars=1500 int_score=4")
+    p.add_argument("--max", nargs="*", metavar="KEY=VALUE", help="e.g. khmer_broken_per_1k=2 dup_lines=0.05")
+    p.add_argument("--sample", type=float, default=1.0, help="keep this fraction (deterministic by id)")
+    p.add_argument(
+        "--invert",
+        action="store_true",
+        help="keep the documents --sample leaves out (train / held-out splits)",
+    )
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--max-docs", type=int)
+    p.set_defaults(fn=cmd_select)
+    p = sub.add_parser("parallel", help="parallel text -> CPT documents, translation pairs, translation SFT")
+    p.add_argument("--layout", choices=["aligned", "grouped", "pairs"], required=True)
+    p.add_argument("--source", help="catalogue name")
+    p.add_argument("--name")
+    p.add_argument("--license")
+    p.add_argument("--generated-by", default="human")
+    p.add_argument("--input", nargs="+", required=True)
+    p.add_argument("--langs", nargs="+", default=["km", "en", "zh"])
+    p.add_argument("--max-ratio", type=float, default=3.0, help="largest allowed length ratio in a pair")
+    p.add_argument("--per-doc", type=int, default=16, help="aligned sentences per CPT document")
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--out-docs", help="CPT documents (.jsonl.zst)")
+    p.add_argument("--out-pairs", help="{src, tgt, src_lang, tgt_lang} rows")
+    p.add_argument("--out-sft", help="translation SFT conversations")
+    p.set_defaults(fn=cmd_parallel)
+    p = sub.add_parser("evalset", help="Belebele / SIB-200 / safety benchmark rows -> `dsm eval` files")
+    p.add_argument("--kind", choices=["belebele", "sib200", "safety"], required=True)
+    p.add_argument("--input", nargs="+", required=True)
+    p.add_argument("--lang", help="language of the rows (required for sib200)")
+    p.add_argument("--converter", help="--kind safety: the benchmark's converter (e.g. xstest)")
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_evalset)
     return parser
 
 

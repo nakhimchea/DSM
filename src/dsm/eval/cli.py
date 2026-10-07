@@ -30,10 +30,25 @@ def _generator(args):
     from dsm.eval.generator import EndpointGenerator, HFGenerator
 
     if args.endpoint:
-        return EndpointGenerator(args.endpoint, model=args.served_model)
-    if not args.model:
+        generator = EndpointGenerator(args.endpoint, model=args.served_model)
+    elif args.model:
+        generator = HFGenerator(args.model, device=args.device, batch_size=args.batch_size)
+    else:
         raise SystemExit("pass --model DIR or --endpoint URL")
-    return HFGenerator(args.model, device=args.device, batch_size=args.batch_size)
+    return _Capped(generator, args.max_new_tokens) if args.max_new_tokens else generator
+
+
+class _Capped:
+    """Caps every request's ``max_new_tokens`` (smoke tests only: truncated answers score lower)."""
+
+    def __init__(self, generator, cap: int) -> None:
+        self.generator, self.cap = generator, cap
+
+    def generate(self, requests):
+        import dataclasses
+
+        capped = [dataclasses.replace(r, max_new_tokens=min(r.max_new_tokens, self.cap)) for r in requests]
+        return self.generator.generate(capped)
 
 
 def _pairs(items: list[str]) -> dict[str, str]:
@@ -73,6 +88,9 @@ def main(argv: list[str] | None = None) -> int:
             p.add_argument("--endpoint", help="OpenAI-compatible base URL, e.g. http://127.0.0.1:8080/v1")
             p.add_argument("--served-model", default="dsm")
             p.add_argument("--batch-size", type=int, default=8)
+            p.add_argument(
+                "--max-new-tokens", type=int, help="cap every answer (smoke tests; lowers the scores)"
+            )
         return p
 
     p = add("suite", "identity / safety / tools / tables / format / rag suites", generation=True)
@@ -178,6 +196,7 @@ def main(argv: list[str] | None = None) -> int:
             args.gates,
         )
         width = max((len(r.metric) for r in results), default=10)
+        print(f"gate {args.stage} ({args.gates})")
         for r in results:
             print(f"[{r.status}] {r.metric.ljust(width)}  {r.detail}")
         failed = sum(r.status == "FAIL" for r in results)

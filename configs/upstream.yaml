@@ -9,7 +9,7 @@
 
 upstream:
   # Hugging Face repo ids of the source checkpoints (downloaded on YOUR machine;
-  # see scripts/10_fetch_upstream.sh).
+  # `dsm fetch`, scripts/10_fetch.sh).
   base_repo_id: "Qwen/Qwen3.5-0.8B-Base"
   instruct_repo_id: "Qwen/Qwen3.5-0.8B"
   license: "Apache-2.0"

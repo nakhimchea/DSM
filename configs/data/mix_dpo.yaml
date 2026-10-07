@@ -1,4 +1,6 @@
-# DPO mixture (~30K pairs) for `dsm data mix`; output: repeat factors for dpo_24gb.yaml.
+# DPO mixture (~30K pairs):
+#   dsm data mix --config configs/data/mix_dpo.yaml --out work/mix/dpo.yaml
+#   dsm dpo --config configs/train/dpo_24gb.yaml --data work/mix/dpo.yaml
 kind: preference
 total: 30000
 sources:

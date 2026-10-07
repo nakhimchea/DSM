@@ -63,6 +63,10 @@ sources:
   - {name: massive_km, kind: parallel, langs: [km, en, zh], tier: use, license: CC-BY-4.0, generated_by: human,
      hf: {repo: AmazonScience/massive, config: km-KH, split: train},
      notes: "also converted to Khmer function calls (dsm build convert --dataset massive)"}
+  - {name: massive_en, kind: parallel, langs: [en], tier: use, license: CC-BY-4.0, generated_by: human,
+     hf: {repo: AmazonScience/massive, config: en-US, split: train}, notes: "aligned with massive_km by id"}
+  - {name: massive_zh, kind: parallel, langs: [zh], tier: use, license: CC-BY-4.0, generated_by: human,
+     hf: {repo: AmazonScience/massive, config: zh-CN, split: train}, notes: "aligned with massive_km by id"}
   - {name: tico19, kind: parallel, langs: [km, en, zh], tier: use, license: CC0-1.0, generated_by: human, verify: true,
      url: "https://tico-19.github.io/"}
   - {name: nllb_mined_km_en, kind: parallel, langs: [km, en], tier: needs_counsel, license: "ODC-BY (mined from web; check terms)", generated_by: web, verify: true,
@@ -118,12 +122,26 @@ sources:
      hf: {repo: thu-coai/Safety-Prompts, split: train}}
 
   # -- evaluation only ----------------------------------------------------------------------------------
-  - {name: belebele, kind: eval, langs: [km, en, zh], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
+  # one entry per language (the hub stores each language as its own subset); prepare them with
+  # `dsm data evalset` (Belebele, SIB-200) and `dsm data parallel --layout grouped` (FLORES+)
+  - {name: belebele, kind: eval, langs: [km], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
      hf: {repo: facebook/belebele, config: khm_Khmr, split: test}}
-  - {name: flores_plus, kind: eval, langs: [km, en, zh], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
-     hf: {repo: openlanguagedata/flores_plus, split: devtest}}
-  - {name: sib200, kind: eval, langs: [km, en, zh], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
+  - {name: belebele_en, kind: eval, langs: [en], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
+     hf: {repo: facebook/belebele, config: eng_Latn, split: test}}
+  - {name: belebele_zh, kind: eval, langs: [zh], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
+     hf: {repo: facebook/belebele, config: zho_Hans, split: test}}
+  - {name: flores_plus, kind: eval, langs: [km], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human, verify: true,
+     hf: {repo: openlanguagedata/flores_plus, config: khm_Khmr, split: devtest}}
+  - {name: flores_plus_en, kind: eval, langs: [en], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human, verify: true,
+     hf: {repo: openlanguagedata/flores_plus, config: eng_Latn, split: devtest}}
+  - {name: flores_plus_zh, kind: eval, langs: [zh], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human, verify: true,
+     hf: {repo: openlanguagedata/flores_plus, config: cmn_Hans, split: devtest}}
+  - {name: sib200, kind: eval, langs: [km], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
      hf: {repo: Davlan/sib200, config: khm_Khmr, split: test}}
+  - {name: sib200_en, kind: eval, langs: [en], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
+     hf: {repo: Davlan/sib200, config: eng_Latn, split: test}}
+  - {name: sib200_zh, kind: eval, langs: [zh], tier: eval_only, license: CC-BY-SA-4.0, generated_by: human,
+     hf: {repo: Davlan/sib200, config: zho_Hans, split: test}}
 
   # -- blocked (kept here so the gate can explain WHY) ----------------------------------------------------
   - {name: nllb_model_translations, kind: sft, langs: [km], tier: blocked, block_reason: noncommercial, license: CC-BY-NC-4.0, generated_by: "model:nllb-200",

@@ -77,4 +77,7 @@ class Decontaminator:
         return count
 
     def contaminated(self, text: str, lang: str) -> bool:
-        return any(_key(gram) in self.index for gram in _grams(text, lang))
+        grams = _grams(text, lang)
+        if lang in ("km", "zh", "zh-Hant"):  # English inside Khmer / Chinese documents (parallel text)
+            grams += _grams(text, "en")
+        return any(_key(gram) in self.index for gram in grams)

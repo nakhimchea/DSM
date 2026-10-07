@@ -17,4 +17,4 @@ python -m pip download --dest "$OUT" -r requirements.lock
 python -m pip download --dest "$OUT" ".[${EXTRAS}]"
 python -m pip wheel --no-deps --wheel-dir "$OUT" .
 ( cd "$OUT" && sha256sum ./* > SHA256SUMS )
-echo "wheelhouse ready: $OUT ($(ls "$OUT" | wc -l) files)"
+echo "wheelhouse ready: $OUT ($(find "$OUT" -maxdepth 1 -type f | wc -l) files)"

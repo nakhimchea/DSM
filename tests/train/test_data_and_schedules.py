@@ -209,3 +209,22 @@ def test_shipped_configs_load(repo_root):
         if cfg.stage in ("pt", "cpt", "anneal"):
             assert cfg.steps_for_tokens() > 0
             assert abs(sum(s.weight for s in cfg.train) - 1.0) < 1e-6, path  # mixture weights are fractions
+
+
+def test_data_file_replaces_the_training_list(tmp_path):
+    (tmp_path / "c.yaml").write_text(
+        "stage: sft\nmodel: m\noutput_dir: o\ndata:\n  train: [a]\n  eval: [{path: e, name: held}]\n"
+    )
+    (tmp_path / "mix.yaml").write_text("data:\n  train:\n    - {path: x, repeat: 2.5, name: chat}\n")
+    cfg = load_config(tmp_path / "c.yaml", [], tmp_path / "mix.yaml")
+    assert [(s.path, s.repeat, s.name) for s in cfg.train] == [("x", 2.5, "chat")]
+    assert [s.path for s in cfg.eval] == ["e"]  # kept: the mix has no eval list
+    (tmp_path / "files").mkdir()
+    for name in ("a", "b"):
+        (tmp_path / "files" / f"{name}.jsonl").write_text("")
+    from dsm.train.config import DataSource, expand_globs
+
+    sources = expand_globs([DataSource(path=str(tmp_path / "files" / "*.jsonl"), repeat=3), DataSource("x")])
+    assert [(s.name, s.repeat) for s in sources] == [("files:a", 3), ("files:b", 3), (None, 1.0)]
+    with pytest.raises(ValueError, match="no files match"):
+        expand_globs([DataSource(path=str(tmp_path / "none" / "*.jsonl"))])

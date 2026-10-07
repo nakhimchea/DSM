@@ -356,10 +356,12 @@ class LMTrainer(BaseTrainer):
             )
             self.n_rows = len(self.data)
         elif cfg.stage == "sft":
+            from dsm.train.config import expand_globs
             from dsm.train.datasets import SFTData
 
             if self.template is None:
                 raise ValueError(f"{self.tok_dir} has no chat_template.jinja")
+            cfg.train, cfg.eval = expand_globs(cfg.train), expand_globs(cfg.eval)
             self.data = SFTData(
                 cfg.train,
                 self.tokenizer,

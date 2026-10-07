@@ -76,6 +76,13 @@ def test_logits_match_upstream_reference(converted) -> None:
     torch.testing.assert_close(ours, _reference_logits(upstream_dir, ids), atol=2e-4, rtol=1e-4)
 
 
+def test_lineage_starts_at_conversion(converted) -> None:
+    upstream_dir, dsm_dir, _ = converted
+    (entry,) = json.loads((dsm_dir / "lineage.json").read_text())
+    assert entry["stage"] == "convert" and entry["source_revision"] is None  # no FETCH.json here
+    assert set(entry["source_weights_sha256"]) == {p.name for p in upstream_dir.glob("*.safetensors")}
+
+
 def test_converted_directory_has_no_upstream_branding(converted) -> None:
     _, out, report = converted
     assert report.audit_findings == []

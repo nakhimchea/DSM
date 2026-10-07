@@ -270,6 +270,7 @@ def kl_divergence(
                 str(ctx),
                 "--kl-divergence-base",
                 str(base),
+                "--no-repack",  # repacked CPU weights + several sequences per batch -> NaN (docs/11)
             ],
             check=True,
             capture_output=True,
@@ -287,6 +288,7 @@ def kl_divergence(
                 "--kl-divergence-base",
                 str(base),
                 "--kl-divergence",
+                "--no-repack",
             ],
             check=True,
             capture_output=True,

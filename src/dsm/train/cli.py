@@ -20,6 +20,7 @@ from dsm.train.config import load_config
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="dsm train", description="Train DSM (pt / cpt / anneal / sft).")
     parser.add_argument("--config", required=True)
+    parser.add_argument("--data", help="training data list from `dsm data mix --out` (replaces data.train)")
     parser.add_argument(
         "--set", action="append", default=[], metavar="KEY=VALUE", help="override a config value (YAML)"
     )
@@ -30,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
         "--dry-run", action="store_true", help="load everything, print the plan, do not train"
     )
     args = parser.parse_args(argv)
-    cfg = load_config(args.config, args.set)
+    cfg = load_config(args.config, args.set, args.data)
     if cfg.stage == "dpo":
         raise SystemExit("use `dsm dpo` for stage: dpo")
 

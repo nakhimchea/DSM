@@ -44,17 +44,22 @@ inspection.
 | format | `data/eval/format/prompts.yaml`: table / LaTeX / code / steps requests | `check_format` validity, requested element present, `think_rate` (must be 0 in fast-only mode) |
 | RAG | `data/eval/rag/documents.yaml`: documents not used in training | answerable: expected fact + citation of the right document; unanswerable: abstains without citing |
 
-The repository does not ship harmful prompt text. Convert the official test splits locally with
-the existing converters, translate a copy to Khmer, and pass the files with `--safety-file`.
+The repository does not ship harmful prompt text. Convert held-out benchmark rows locally
+(`dsm data evalset --kind safety --converter xstest --input datasets/raw/xstest --out
+datasets/eval/safety_xstest.jsonl`), add Khmer and Chinese files the same way, and pass them with
+`--safety-file`. The runbook scripts pass every `datasets/eval/safety_*.jsonl` automatically.
 
 ### Translation and multiple choice
 
-* `dsm eval translate --data flores_devtest.jsonl` uses the same instruction format as the
-  translation training data. Scores are corpus **chrF++**: an in-house implementation that matches
-  sacrebleu exactly, which a test checks.
-* `dsm eval choice --data belebele_km.jsonl` scores every option as the assistant's answer through
-  the chat template and picks the highest log-probability per byte. Rows have the form
-  `{context, question, options, answer, lang}`.
+* `dsm eval translate --data datasets/eval/flores_pairs.jsonl` uses the same instruction format
+  as the translation training data. Scores are corpus **chrF++**: an in-house implementation that
+  matches sacrebleu exactly, which a test checks. The pairs come from the FLORES+ downloads:
+  `dsm data parallel --layout grouped --source flores_plus --input datasets/raw/flores_plus*
+  --out-pairs datasets/eval/flores_pairs.jsonl`.
+* `dsm eval choice --data datasets/eval/belebele.jsonl` scores every option as the assistant's
+  answer through the chat template and picks the highest log-probability per byte. Rows have the
+  form `{context, question, options, answer, lang}`; `dsm data evalset --kind belebele` and
+  `--kind sib200 --lang km` write them from the downloads.
 * Belebele has about 900 questions per language, giving a standard error of about 1.6 points.
   Differences of 2–3 points between two checkpoints are noise; use bpb and KL for small changes.
 
@@ -69,7 +74,7 @@ model.
 ## 2. Gates (`configs/eval/gates.yaml`)
 
 ```bash
-dsm eval suite --model work/runs/sft/final --out results/sft --safety-file data/local/safety_test.jsonl
+dsm eval suite --model work/runs/sft/final --out results/sft --safety-file datasets/eval/safety_xstest.jsonl
 dsm eval gate --stage after_sft --results results/sft/metrics.json --baseline results/instruct/metrics.json
 ```
 

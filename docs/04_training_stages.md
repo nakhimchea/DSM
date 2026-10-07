@@ -85,7 +85,10 @@ dsm merge interpolate --a work/runs/sft/final --b work/runs/dpo/final --alpha 0.
 ```
 
 Any value can be overridden: `--set optimizer.lr=1.5e-5 --set epochs=1`. Numbers such as `1e-4`
-are accepted, even though plain YAML would read them as strings.
+are accepted, even though plain YAML would read them as strings. `--data work/mix/sft.yaml`
+replaces the training list with the one `dsm data mix --out` computed (weights for pre-training,
+repeat factors for SFT / DPO). SFT and DPO paths may be globs (`datasets/sft/chat/*.jsonl.zst`).
+The runbook scripts ([13_runbook_24gb.md](13_runbook_24gb.md)) chain all of this.
 
 ### Configs (`configs/train/*_24gb.yaml`)
 

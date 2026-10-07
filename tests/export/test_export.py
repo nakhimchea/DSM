@@ -59,6 +59,10 @@ def test_server_command_is_local_and_offline():
         "--host 127.0.0.1" in joined and "--port 9000" in joined and "--jinja" in cmd and "--offline" in cmd
     )
     assert "--no-webui" in cmd and "--reasoning-format none" in joined and "--api-key k" in joined
+    # CPU weight repacking only with a single sequence per batch (llama.cpp issue, docs/11)
+    assert "--no-repack" not in server_command(ServerConfig(gguf="m.gguf", parallel=1), "x")
+    assert "--no-repack" in server_command(ServerConfig(gguf="m.gguf", parallel=2), "x")
+    assert "--no-repack" not in server_command(ServerConfig(gguf="m.gguf", parallel=2, repack=True), "x")
     with pytest.raises(ValueError, match="localhost"):
         server_command(ServerConfig(gguf="m.gguf", host="0.0.0.0"), "llama-server")
     assert "0.0.0.0" in server_command(
@@ -271,6 +275,60 @@ def test_llama_cpp_tokenizes_the_khmer_extension_like_hf(khmer_extended_gguf):
         assert used_new
         text = normalize_text(held[0])
         assert post("/detokenize", {"tokens": tokenizer.encode(text).ids})["content"] == text
+    finally:
+        process.terminate()
+        process.wait(timeout=30)
+
+
+@pytest.mark.llamacpp
+@needs_llama_cpp
+def test_quantized_model_with_parallel_requests(tiny_gguf, tmp_path):
+    """Q8_0 on CPU: concurrent requests give the sequential answers, and the KL check is finite.
+
+    At the pinned llama.cpp commit, repacked CPU weights corrupt this architecture's outputs when
+    two sequences share a batch; the launcher and the KL check switch repacking off (docs/11).
+    """
+    import concurrent.futures
+
+    from dsm.export.gguf import kl_divergence, quantize
+    from dsm.export.llama_server import start
+
+    binary, perplexity = _binary("llama-server"), _binary("llama-perplexity")
+    if binary is None or perplexity is None:
+        pytest.skip("llama.cpp binaries not built")
+    _, path = tiny_gguf
+    q8 = quantize(
+        path,
+        tmp_path / "tiny-Q8_0.gguf",
+        "Q8_0",
+        bin_dir=os.environ.get("DSM_LLAMA_BIN"),
+        llama_cpp=LLAMA_CPP,
+    )
+    text = tmp_path / "text.txt"
+    text.write_text(" ".join(["The bank opens at eight in the morning and closes at five."] * 120))
+    result = kl_divergence(
+        path, q8, text, bin_dir=os.environ.get("DSM_LLAMA_BIN"), llama_cpp=LLAMA_CPP, ctx=128
+    )
+    assert 0 <= result["kl"] < 1 and result["top1_agreement"] > 0.5
+
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    process = start(ServerConfig(gguf=str(q8), port=port, ctx=1024, gpu_layers=0, parallel=2), binary)
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+    def complete(prompt: str) -> str:
+        payload = {"prompt": prompt, "n_predict": 24, "temperature": 0, "samplers": ["top_k"], "top_k": 1}
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{port}/completion", json.dumps({**payload, "cache_prompt": False}).encode()
+        )
+        return json.loads(opener.open(request, timeout=60).read())["content"]
+
+    try:
+        prompts = ["The bank opens at eight", "Interest rates in Cambodia are", "សួស្តី", "你好"]
+        sequential = [complete(p) for p in prompts]
+        with concurrent.futures.ThreadPoolExecutor(len(prompts)) as pool:
+            assert list(pool.map(complete, prompts)) == sequential
     finally:
         process.terminate()
         process.wait(timeout=30)

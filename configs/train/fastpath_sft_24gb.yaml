@@ -12,9 +12,7 @@ data:
     - {path: datasets/sft/seeds/tables.jsonl.zst}
     - {path: datasets/sft/seeds/formatting.jsonl.zst, repeat: 2}
     - {path: datasets/sft/seeds/rag.jsonl.zst, repeat: 2}
-    - {path: datasets/sft/replay/general.jsonl.zst}       # general chat replay (km/en/zh), keeps old skills
-  eval:
-    - {path: datasets/sft/heldout/fastpath_eval.jsonl.zst, name: heldout}
+    - {path: "datasets/sft/chat/*.jsonl.zst", repeat: 0.1}  # 10 % of the general chats: keeps old skills
 sft: {train_on: all, packing: true}
 epochs: 2
 seq_len: 4096

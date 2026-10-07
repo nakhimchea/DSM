@@ -185,16 +185,17 @@ class LocalBackend:
 
 
 class EndpointBackend:
-    def __init__(self, base_url: str) -> None:
+    def __init__(self, base_url: str, max_new_tokens: int = 1024) -> None:
         from dsm.eval.generator import EndpointGenerator
 
         self.gen = EndpointGenerator(base_url)
+        self.max_new_tokens = max_new_tokens
 
     def __call__(self, messages: list[dict], tools: list[dict] | None, stream=None) -> str:
         from dsm.eval.generator import Request
         from dsm.tools.toolcall import render_tool_calls
 
-        reply = self.gen.generate([Request(messages, tools=tools, max_new_tokens=1024)])[0]
+        reply = self.gen.generate([Request(messages, tools=tools, max_new_tokens=self.max_new_tokens)])[0]
         text = reply.content + (
             render_tool_calls(reply.tool_calls, reply.content) if reply.tool_calls else ""
         )
@@ -221,14 +222,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--endpoint", help="OpenAI-compatible base URL (llama-server)")
     parser.add_argument("--device", default="auto")
     parser.add_argument("--temperature", type=float, default=0.7)
+    parser.add_argument("--max-new-tokens", type=int, default=1024)
     parser.add_argument("--log", help="append a PII-masked transcript to this file")
     args = parser.parse_args(argv)
     if not (args.model or args.endpoint):
         parser.error("pass --model DIR or --endpoint URL")
     backend = (
-        EndpointBackend(args.endpoint)
+        EndpointBackend(args.endpoint, max_new_tokens=args.max_new_tokens)
         if args.endpoint
-        else LocalBackend(args.model, args.device, temperature=args.temperature)
+        else LocalBackend(
+            args.model, args.device, max_new_tokens=args.max_new_tokens, temperature=args.temperature
+        )
     )
     logger = None
     if args.log:

@@ -186,11 +186,27 @@ def _set(tree: dict, dotted: str, raw: str) -> None:
     node[keys[-1]] = yaml.safe_load(raw)
 
 
-def load_config(path: str | Path, overrides: list[str] | None = None) -> TrainConfig:
-    """Load a YAML config; ``overrides`` are ``key.sub=value`` strings (values parsed as YAML)."""
+def load_config(
+    path: str | Path, overrides: list[str] | None = None, data_file: str | Path | None = None
+) -> TrainConfig:
+    """Load a YAML config; ``overrides`` are ``key.sub=value`` strings (values parsed as YAML).
+
+    ``data_file`` (the output of ``dsm data mix --out``) replaces the training data list,
+    and the evaluation list too if it has one.
+    """
     from dsm.utils import resolve_config
 
     tree = yaml.safe_load(resolve_config(path).read_text(encoding="utf-8")) or {}
+    if data_file:
+        mix = (yaml.safe_load(Path(data_file).read_text(encoding="utf-8")) or {}).get("data") or {}
+        if not mix.get("train"):
+            raise ValueError(f"{data_file}: no data.train list")
+        data = dict(tree.get("data") or {})
+        for key in ("train", "eval"):
+            if key in mix:
+                tree.pop(key, None)
+                data[key] = mix[key]
+        tree["data"] = data
     for item in overrides or []:
         if "=" not in item:
             raise ValueError(f"override must look like key=value: {item!r}")
@@ -224,6 +240,28 @@ def config_from_dict(tree: dict) -> TrainConfig:
     config.optimizer.betas = tuple(float(b) for b in config.optimizer.betas)
     config.validate()
     return config
+
+
+def expand_globs(sources: list[DataSource]) -> list[DataSource]:
+    """SFT / DPO data: ``datasets/sft/chat/*.jsonl.zst`` -> one source per file, same repeat
+    (expanded when the trainer loads its data, so configs load without the data)."""
+    import glob
+
+    out = []
+    for source in sources:
+        if not any(c in source.path for c in "*?["):
+            out.append(source)
+            continue
+        matches = sorted(glob.glob(source.path))
+        if not matches:
+            raise ValueError(
+                f"no files match {source.path!r}: build that data first or remove the line from the config"
+            )
+        prefix = source.name or Path(source.path).parent.name
+        for match in matches:
+            stem = Path(match).name.split(".")[0]
+            out.append(dataclasses.replace(source, path=match, name=f"{prefix}:{stem}"))
+    return out
 
 
 # Fields whose default is None but whose value is numeric.

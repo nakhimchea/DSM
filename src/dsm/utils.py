@@ -56,6 +56,17 @@ def sha256_file(path: str | Path, chunk: int = 1 << 20) -> str:
     return digest.hexdigest()
 
 
+def id_fraction(doc_id: str, seed: int = 0) -> float:
+    """A uniform number in [0, 1) fixed by a document id: deterministic samples and splits.
+
+    ``dsm data pack --heldout F`` holds out exactly the documents with ``id_fraction < F``
+    (seed 0), the same ones ``dsm data select --sample F`` picks - so every pack can
+    exclude the evaluation documents and ``select`` can export them.
+    """
+    digest = hashlib.sha256(f"{seed}|{doc_id}".encode()).digest()
+    return int.from_bytes(digest[:8], "big") / 2**64
+
+
 def read_jsonl(path: str | Path) -> Iterator[dict]:
     """Read JSON lines (``.jsonl`` or zstandard-compressed ``.jsonl.zst``)."""
     path = Path(path)
